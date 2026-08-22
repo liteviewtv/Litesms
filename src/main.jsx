@@ -34,7 +34,7 @@ function App() {
 
   useEffect(() => {
     let mounted = true;
-    supabase.from('providers').select('id').limit(1').then(({ error }) => {
+    supabase.from('providers').select('id').limit(1).then(({ error }) => {
       if (mounted) setDbStatus(error ? 'offline' : 'connected');
     });
     return () => { mounted = false; };
