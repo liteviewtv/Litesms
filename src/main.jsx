@@ -14,16 +14,24 @@ function App() {
     telegram.ready();
     telegram.expand();
     if (!telegram.initData) return setAuthStatus('Open inside Telegram');
+    if (!supabase) return setAuthStatus('Supabase configuration missing');
     (async () => {
-      const { data, error } = await supabase.functions.invoke('telegram-auth', { body: { initData: telegram.initData } });
-      if (error || data?.error) return setAuthStatus('Authentication unavailable');
-      setProfile(data.profile);
-      setAuthStatus('Connected');
+      try {
+        const { data, error } = await supabase.functions.invoke('telegram-auth', { body: { initData: telegram.initData } });
+        if (error || data?.error) return setAuthStatus('Authentication unavailable');
+        setProfile(data.profile);
+        setAuthStatus('Connected');
+      } catch {
+        setAuthStatus('Authentication unavailable');
+      }
     })();
   }, []);
 
   useEffect(() => {
-    supabase.from('providers').select('id').limit(1).then(({ error }) => setDbStatus(error ? 'offline' : 'connected'));
+    if (!supabase) return setDbStatus('offline');
+    supabase.from('providers').select('id').limit(1)
+      .then(({ error }) => setDbStatus(error ? 'offline' : 'connected'))
+      .catch(() => setDbStatus('offline'));
   }, []);
 
   return <main className="app">
