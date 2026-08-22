@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { supabase } from './lib/supabase';
 import './styles.css';
 
 function App() {
+  const [dbStatus, setDbStatus] = useState('checking');
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.from('providers').select('id').limit(1).then(({ error }) => {
+      if (mounted) setDbStatus(error ? 'offline' : 'connected');
+    });
+    return () => { mounted = false; };
+  }, []);
+
   return (
     <main className="app">
       <header className="header">
@@ -18,6 +29,9 @@ function App() {
         <article><span>💳</span><p>Wallet Balance</p><strong>$0.00</strong></article>
         <article><span>📱</span><p>Active Orders</p><strong>0</strong></article>
       </section>
+      <div className={`db-status ${dbStatus}`}>
+        <span className="status-dot" /> Supabase {dbStatus === 'checking' ? 'checking…' : dbStatus}
+      </div>
       <button className="primary">Buy a Number</button>
       <nav className="bottom"><a className="active">Home</a><a>Orders</a><a>Wallet</a><a>Profile</a></nav>
     </main>
