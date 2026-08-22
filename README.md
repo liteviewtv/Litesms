@@ -1,1 +1,2 @@
 # Litesms
+Deployment configuration active
