@@ -1,0 +1,1 @@
+Supabase browser client is configured through VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY. Never place a service-role key in frontend code.
