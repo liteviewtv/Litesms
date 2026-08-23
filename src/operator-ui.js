@@ -1,6 +1,5 @@
 import { supabase } from './lib/supabase';
 
-const LIVE_REFRESH_MS = 10000;
 const stateBySelect = new WeakMap();
 const money = (value) => {
   const n = Number(value);
@@ -46,7 +45,7 @@ async function loadLiveOperators(select, panel, context, force = false) {
   const key = `${context.country}|${context.service}`;
   const current = stateBySelect.get(select) || {};
   if (!force && current.contextKey === key && (current.loading || current.loaded)) return;
-  if (force && current.contextKey === key && current.loading) return;
+  if (current.loading && current.contextKey === key) return;
 
   const requestId = (current.requestId || 0) + 1;
   stateBySelect.set(select, { contextKey: key, requestId, loading: true, loaded: false });
@@ -152,7 +151,45 @@ function sync(force = false) {
   });
 }
 
+let lastSelectionKey = '';
+
+function handleSelectionChange() {
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.panel').forEach((panel) => {
+      if (panel.querySelector('h2')?.textContent?.trim() !== 'Buy a Number') return;
+      const context = getBuyContext(panel);
+      if (!context.country || !context.service) return;
+      const key = `${context.country}|${context.service}`;
+      if (key === lastSelectionKey) return;
+      lastSelectionKey = key;
+      sync(true);
+    });
+  });
+}
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('.choice-chip');
+  if (!button) return;
+  const list = button.closest('.choice-list');
+  if (!list) return;
+  const panel = button.closest('.panel');
+  if (!panel || panel.querySelector('h2')?.textContent?.trim() !== 'Buy a Number') return;
+  if (list === panel.querySelectorAll('.choice-list')[0] || list === panel.querySelectorAll('.choice-list')[1]) {
+    handleSelectionChange();
+  }
+});
+
+// Keep the observer only for route/render changes. It never forces a live refresh.
 const observer = new MutationObserver(() => requestAnimationFrame(() => sync(false)));
 observer.observe(document.body, { childList: true, subtree: true });
-setTimeout(() => sync(true), 300);
-setInterval(() => sync(true), LIVE_REFRESH_MS);
+
+// One initial load for the currently selected country/service; after that,
+// live availability and pricing refresh only when the selection changes.
+setTimeout(() => {
+  document.querySelectorAll('.panel').forEach((panel) => {
+    if (panel.querySelector('h2')?.textContent?.trim() !== 'Buy a Number') return;
+    const context = getBuyContext(panel);
+    if (context.country && context.service) lastSelectionKey = `${context.country}|${context.service}`;
+  });
+  sync(false);
+}, 300);
