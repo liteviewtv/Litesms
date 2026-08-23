@@ -1,0 +1,8 @@
+/*
+  Cache the HTML entrypoint as little as possible so Telegram WebView
+  does not keep an older Mini App shell.
+*/
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
