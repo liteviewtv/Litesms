@@ -1,0 +1,51 @@
+name: Patch automatic order expiration
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch expiration handling
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/main.jsx')
+          s=p.read_text()
+          marker="const statusLabel=(s)=>({pending:'Waiting for SMS',active:'Waiting for SMS',completed:'Completed',cancelled:'Cancelled',refunded:'Refunded',failed:'Failed',expired:'Expired'}[String(s).toLowerCase()]||s||'Unknown');"
+          if 'const expirationCancels=new Set();' not in s:
+              s=s.replace("import { renderAdminDashboard } from './admin-ui';", "import { renderAdminDashboard } from './admin-ui';\n\nconst expirationCancels=new Set();", 1)
+          old=""" const cancelOrder=async(orderId)=>{if(!orderId||!profile)return;setOrderChecking(v=>({...v,[orderId]:true}));setMessage('Cancelling order…');try{const t=window.Telegram?.WebApp;const {data,error}=await supabase.functions.invoke('fivesim-order',{body:{initData:t?.initData,action:'cancel',order_id:orderId}});if(error||data?.error)throw new Error(data?.error||error?.message||'Cancellation failed');if(!data?.success)throw new Error(data?.message||'Cancellation failed');setMessage('Order cancelled and refund processed.');await loadData(profile.id)}catch(e){setMessage(e.message||'Cancellation failed')}finally{setOrderChecking(v=>({...v,[orderId]:false}))}};"""
+          new=""" const cancelOrder=async(orderId)=>{if(!orderId||!profile)return false;if(orderChecking[orderId])return false;setOrderChecking(v=>({...v,[orderId]:true}));try{const t=window.Telegram?.WebApp;const {data,error}=await supabase.functions.invoke('fivesim-order',{body:{initData:t?.initData,action:'cancel',order_id:orderId}});if(error||data?.error)throw new Error(data?.error||error?.message||'Cancellation failed');if(!data?.success)throw new Error(data?.message||'Cancellation failed');setMessage('Order cancelled and refund processed.');await loadData(profile.id);return true}catch(e){setMessage(e.message||'Cancellation failed');return false}finally{setOrderChecking(v=>({...v,[orderId]:false}))}};"""
+          if old not in s: raise SystemExit('cancelOrder block not found')
+          s=s.replace(old,new,1)
+          old_effect=""" useEffect(()=>{const timer=setInterval(()=>setOrderExpiry(v=>({...v})),1000);return()=>clearInterval(timer)},[]);"""
+          new_effect=""" useEffect(()=>{const timer=setInterval(()=>setOrderExpiry(v=>({...v})),1000);return()=>clearInterval(timer)},[]);
+ useEffect(()=>{if(!profile||!orders.length)return;const now=Date.now();orders.forEach(o=>{const s=String(o.status||'').toLowerCase();const expiry=Number(orderExpiry[o.id]||0);if(!o.provider_order_id||!['pending','active'].includes(s)||!expiry||expiry>now||expirationCancels.has(o.id))return;expirationCancels.add(o.id);cancelOrder(o.id).then(ok=>{if(!ok)expirationCancels.delete(o.id)}).catch(()=>expirationCancels.delete(o.id))});},[profile,orders,orderExpiry]);"""
+          if old_effect not in s: raise SystemExit('timer effect not found')
+          s=s.replace(old_effect,new_effect,1)
+          p.write_text(s)
+          PY
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit patch and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.jsx
+          git rm .github/workflows/patch-order-expiration.yml
+          git commit -m "Automatically cancel expired SMS orders"
+          git push
