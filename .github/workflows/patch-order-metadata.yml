@@ -1,0 +1,47 @@
+name: Patch Orders metadata
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch Orders card metadata
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('src/main.jsx')
+          text = p.read_text()
+          pattern = r"\{tab==='orders'&&<section className=\"panel\"><h2>Orders</h2>.*?</section>\}"
+          replacement = r'''{tab==='orders'&&<section className="panel"><h2>Orders</h2>{filteredOrders.length?filteredOrders.map(o=>{const s=String(o.status||'').toLowerCase();const completed=s==='completed';const phoneRaw=String(o.phone_number||'Pending');const phone=phoneRaw.startsWith('+')?phoneRaw:`+${phoneRaw}`;const code=o.sms_code==null?'':String(o.sms_code).trim();const countryRaw=String(o.country||'').trim();const serviceRaw=String(o.service||'').trim();const country=countryRaw.toLowerCase()==='usa'?'USA':countryRaw?countryRaw.replace(/(^|[-_\s])([a-z])/g,(_,a,b)=>a+b.toUpperCase()):'—';const service=serviceRaw?serviceRaw.replace(/(^|[-_\s])([a-z])/g,(_,a,b)=>a+b.toUpperCase()):'—';const priceValue=Number(o.retail_price_ngn??o.amount);const price=Number.isFinite(priceValue)?priceValue:null;const numberCopied=copiedOrder===`${o.id}:number`;const codeCopied=copiedOrder===`${o.id}:code`;return <article key={o.id} className="list-card" style={{display:'flex',flexDirection:'column',gap:'12px',margin:'12px 0',padding:'16px',border:'1px solid #dbe7f0',borderRadius:'18px',background:'#fff',boxShadow:'0 5px 18px rgba(15,23,42,.06)'}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'10px'}}><strong style={{fontSize:'14px',color:'#12324a',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>🌍 {country} · {service}</strong>{price!=null&&<span style={{flex:'0 0 auto',fontSize:'13px',fontWeight:800,color:'#12324a'}}>💰 ₦{price.toLocaleString()}</span>}</div><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'10px'}}><strong style={{fontSize:'17px',color:'#12324a',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>📱 {phone}</strong><button type="button" onClick={()=>copyText(phone,o.id,'number')} style={{flex:'0 0 auto',border:'1px solid #bfdbfe',background:'#eff6ff',color:'#1261a0',borderRadius:'10px',padding:'9px 11px',fontSize:'12px',fontWeight:800}}>{numberCopied?'Copied':'Copy Number'}</button></div><span style={{display:'inline-flex',alignItems:'center',gap:'7px',width:'fit-content',padding:'6px 10px',borderRadius:'999px',background:completed?'#ecfdf3':'#eff6ff',color:completed?'#15803d':'#2563eb',fontSize:'12px',fontWeight:800}}><span style={{width:'7px',height:'7px',borderRadius:'50%',background:completed?'#16a34a':'#3b82f6'}}/> {completed?'Completed':statusLabel(o.status)}</span>{!completed&&countdown(o.id)&&<small style={{color:'#61758a',fontSize:'12px',fontWeight:700}}>{countdown(o.id)}</small>}{completed&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'12px',padding:'13px 14px',borderRadius:'14px',background:'#f0fdf4',border:'1px solid #bbf7d0'}}><div style={{display:'flex',flexDirection:'column',gap:'4px',minWidth:0}}><small style={{fontSize:'11px',fontWeight:800,color:'#15803d'}}>🔐 SMS CODE</small><strong style={{fontSize:'22px',letterSpacing:'2px',color:'#12324a'}}>{code||'—'}</strong></div>{code&&<button type="button" onClick={()=>copyText(code,o.id,'code')} style={{flex:'0 0 auto',border:'1px solid #86efac',background:'#fff',color:'#15803d',borderRadius:'10px',padding:'9px 11px',fontSize:'12px',fontWeight:800}}>{codeCopied?'Copied':'Copy Code'}</button>}</div>}</article>}) : <div className="empty">No orders yet.</div>}</section>}'''
+          new_text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'Expected exactly one Orders block, found {count}')
+          p.write_text(new_text)
+          PY
+
+      - name: Verify build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and remove patch workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.jsx .github/workflows/patch-order-metadata.yml
+          git commit -m "Add country service and price to order cards"
+          git rm .github/workflows/patch-order-metadata.yml
+          git commit -m "Remove temporary Orders patch workflow"
+          git push
