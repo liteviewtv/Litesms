@@ -4,19 +4,29 @@ const icons = {
   Wallet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H19a1 1 0 0 1 1 1v3H7a2 2 0 0 0 0 4h13v5a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 16.5v-10Z"/><path d="M20 8H7a2 2 0 0 0 0 4h13V8Z"/><circle cx="16" cy="10" r=".8"/></svg>',
   Profile: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'
 };
+const order = ['Home','Orders','Wallet','Profile'];
 
 function enhanceNavigation() {
   const nav = document.querySelector('.bottom');
   if (!nav) return;
   nav.setAttribute('aria-label', 'Main navigation');
-  nav.querySelectorAll('a').forEach((link) => {
+  const links = [...nav.querySelectorAll('a')];
+  links.forEach((link) => {
     const label = (link.textContent || '').trim().replace(/\s+/g, ' ');
-    const key = Object.keys(icons).find((name) => label.toLowerCase().includes(name.toLowerCase()));
-    if (!key || link.dataset.navigationEnhanced === 'true') return;
-    link.dataset.navigationEnhanced = 'true';
+    const key = order.find((name) => label.toLowerCase().includes(name.toLowerCase())) ||
+      order.find((name) => link.getAttribute('aria-label')?.toLowerCase().includes(name.toLowerCase()));
+    if (!key) return;
+    link.dataset.navigationKey = key;
     link.setAttribute('aria-label', key);
-    link.innerHTML = `${icons[key]}<span>${key}</span>`;
+    if (link.dataset.navigationEnhanced !== 'true') {
+      link.dataset.navigationEnhanced = 'true';
+      link.innerHTML = `${icons[key]}<span>${key}</span>`;
+    }
   });
+  const keyed = order.map((key) => links.find((link) => link.dataset.navigationKey === key)).filter(Boolean);
+  if (keyed.length === order.length && keyed.some((link, i) => links[i] !== link)) {
+    keyed.forEach((link) => nav.appendChild(link));
+  }
 }
 
 const observer = new MutationObserver(enhanceNavigation);
