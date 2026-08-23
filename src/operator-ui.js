@@ -1,93 +1,176 @@
 import { supabase } from './lib/supabase';
 
-const PRICE_REFRESH_MS = 30000;
-const renderedSignatures = new WeakMap();
-const priceCache = new Map();
-const flagMap = { /* existing country flags preserved */ };
-const money = (value) => { const n = Number(value); return Number.isFinite(n) ? `₦${Math.round(n).toLocaleString()}` : 'Unavailable'; };
-
-async function getPrice(country, service, operator) {
-  const key = `${country}:${service}:${operator}`;
-  const cached = priceCache.get(key);
-  if (cached && Date.now() - cached.at < PRICE_REFRESH_MS) return cached.price;
-  try {
-    const { data, error } = await supabase.functions.invoke('fivesim-catalog', { body: { action: 'price', country, service, operator } });
-    if (error || data?.error) throw new Error('price unavailable');
-    const price = Number(data?.data?.retail_price_ngn);
-    const result = Number.isFinite(price) ? price : null;
-    priceCache.set(key, { price: result, at: Date.now() });
-    return result;
-  } catch { priceCache.set(key, { price: null, at: Date.now() }); return null; }
-}
+const LIVE_REFRESH_MS = 10000;
+const stateBySelect = new WeakMap();
+const money = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? `₦${Math.round(n).toLocaleString()}` : 'Unavailable';
+};
 
 function slug(value) {
-  const map = {'united states':'usa','united kingdom':'uk','great britain':'uk'};
+  const map = { 'united states': 'usa', 'united kingdom': 'uk', 'great britain': 'uk' };
   const normalized = String(value || '').trim().toLowerCase();
   return map[normalized] || normalized.replace(/\s+/g, '');
 }
-function getFlag(value) { return flagMap[slug(value)] || '🌐'; }
+
 function getBuyContext(panel) {
   const lists = [...panel.querySelectorAll('.choice-list')];
   const countryButton = lists[0]?.querySelector('.choice-chip.selected');
   const serviceButton = lists[1]?.querySelector('.choice-chip.selected');
-  return { country: slug(countryButton?.dataset.countryId || countryButton?.textContent?.replace(/^\S+\s+/, '').trim() || ''), service: slug(serviceButton?.dataset.serviceId || serviceButton?.textContent?.trim() || '') };
+  return {
+    country: slug(countryButton?.dataset.countryId || countryButton?.textContent?.replace(/^\S+\s+/, '').trim() || ''),
+    service: slug(serviceButton?.dataset.serviceId || serviceButton?.textContent?.trim() || '')
+  };
 }
+
 function decorateCountries(panel) {
-  const list = panel.querySelectorAll('.choice-list')[0]; if (!list) return;
+  const list = panel.querySelectorAll('.choice-list')[0];
+  if (!list) return;
   list.querySelectorAll('.choice-chip').forEach((button) => {
     if (button.dataset.countryDecorated === 'true') return;
-    const raw = button.textContent.trim(); button.dataset.countryId = slug(raw);
-    const flag = document.createElement('span'); flag.className = 'country-flag'; flag.textContent = getFlag(raw); flag.style.marginRight = '8px'; flag.setAttribute('aria-hidden','true'); button.prepend(flag); button.dataset.countryDecorated = 'true';
+    const raw = button.textContent.trim();
+    button.dataset.countryId = slug(raw);
+    button.dataset.countryDecorated = 'true';
   });
 }
+
 function hideRetailNotice(panel) {
-  panel.querySelectorAll('.notice').forEach((notice) => { const text = (notice.textContent || '').trim(); notice.style.display = text.startsWith('Litesms price:') ? 'none' : ''; });
+  panel.querySelectorAll('.notice').forEach((notice) => {
+    const text = (notice.textContent || '').trim();
+    notice.style.display = text.startsWith('Litesms price:') ? 'none' : '';
+  });
 }
-function parseAvailability(option) {
-  const match = String(option?.textContent || '').match(/·\s*([\d,]+)\s+available/i);
-  return match ? `${match[1]} numbers` : '';
+
+async function getLivePrice(country, service, operator) {
+  try {
+    const { data, error } = await supabase.functions.invoke('fivesim-catalog', {
+      body: { action: 'price', country, service, operator }
+    });
+    if (error || data?.error) throw new Error('price unavailable');
+    const price = Number(data?.data?.retail_price_ngn);
+    return Number.isFinite(price) ? price : null;
+  } catch {
+    return null;
+  }
 }
-async function renderOperatorCards(select, context, signature) {
-  if (!select || !supabase || renderedSignatures.get(select) === signature) return;
-  renderedSignatures.set(select, signature);
-  const panel = select.closest('.panel'); if (!panel) return;
+
+async function loadLiveOperators(select, panel, context, force = false) {
+  if (!select || !supabase) return;
+  const key = `${context.country}|${context.service}`;
+  const current = stateBySelect.get(select) || {};
+  if (!force && current.contextKey === key && current.loaded) return;
+
+  const requestId = (current.requestId || 0) + 1;
+  stateBySelect.set(select, { ...current, contextKey: key, requestId, loaded: false });
   select.style.display = 'none';
+
   let wrap = panel.querySelector('[data-litesms-operators]');
-  if (!wrap) { wrap = document.createElement('div'); wrap.dataset.litesmsOperators = 'true'; wrap.className = 'operator-cards'; select.insertAdjacentElement('afterend', wrap); }
-  const rawOptions = [...select.options].filter((option) => option.value && option.value !== 'Service unavailable');
-  const options = []; let anyOption = null;
-  rawOptions.forEach((option) => {
-    const value = String(option.value || '').trim().toLowerCase(); const text = String(option.textContent || '').trim().toLowerCase();
-    const isAny = value === 'any' || value === 'any_operator' || value === 'anyoperator' || text === 'any operator';
-    if (isAny) { if (!anyOption) anyOption = option; return; } options.push(option);
-  });
-  if (anyOption) options.unshift(anyOption); else options.unshift({ value: 'any', textContent: 'Any operator' });
-  if (!options.length) { wrap.innerHTML = '<div class="operator-empty">Service unavailable, try again later.</div>'; return; }
-  wrap.innerHTML = '';
-  options.forEach((option) => {
-    const value = String(option.value || 'any'); const card = document.createElement('button'); card.type = 'button'; card.className = `operator-card${value === select.value ? ' selected' : ''}`; card.dataset.operatorValue = value;
-    const info = document.createElement('span'); info.className = 'operator-info';
-    const name = document.createElement('span'); name.className = 'operator-name'; name.textContent = value === 'any' ? 'Any operator' : String(option.textContent || '').replace(/\s+·\s+.*$/, '').trim();
-    info.appendChild(name);
-    const availability = parseAvailability(option);
-    if (availability) { const availabilityEl = document.createElement('span'); availabilityEl.className = 'operator-availability'; availabilityEl.textContent = availability; info.appendChild(availabilityEl); }
-    const price = document.createElement('span'); price.className = 'operator-price'; price.textContent = 'Checking…';
-    card.append(info, price);
-    card.addEventListener('click', () => { select.value = value; select.dispatchEvent(new Event('change', { bubbles: true })); wrap.querySelectorAll('.operator-card').forEach((el) => el.classList.remove('selected')); card.classList.add('selected'); });
-    wrap.appendChild(card);
-    getPrice(context.country, context.service, value).then((priceValue) => { const priceEl = card.querySelector('.operator-price'); if (priceEl) priceEl.textContent = priceValue == null ? 'Unavailable' : money(priceValue); });
-  });
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.dataset.litesmsOperators = 'true';
+    wrap.className = 'operator-cards';
+    select.insertAdjacentElement('afterend', wrap);
+  }
+
+  wrap.innerHTML = '<div class="operator-empty">Checking live availability…</div>';
+
+  try {
+    const { data, error } = await supabase.functions.invoke('fivesim-catalog', {
+      body: { action: 'operators', country: context.country, service: context.service }
+    });
+    if (error || data?.error) throw new Error('operators unavailable');
+
+    const incoming = Array.isArray(data?.data) ? data.data : [];
+    if (stateBySelect.get(select)?.requestId !== requestId) return;
+
+    const operators = incoming
+      .filter((item) => item && item.id && Number(item.count) > 0)
+      .map((item) => ({
+        id: String(item.id).toLowerCase(),
+        name: item.name || item.id,
+        count: Number(item.count) || 0
+      }));
+
+    const anyIndex = operators.findIndex((item) => item.id === 'any');
+    if (anyIndex > 0) {
+      const [any] = operators.splice(anyIndex, 1);
+      operators.unshift(any);
+    }
+
+    if (!operators.length) {
+      wrap.innerHTML = '<div class="operator-empty">Service unavailable, try again later.</div>';
+      stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
+      return;
+    }
+
+    const previousValue = String(select.value || '').toLowerCase();
+    const selected = operators.some((item) => item.id === previousValue) ? previousValue : operators[0].id;
+    select.value = selected;
+
+    wrap.innerHTML = '';
+    operators.forEach((item) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = `operator-card${item.id === selected ? ' selected' : ''}`;
+      card.dataset.operatorValue = item.id;
+
+      const name = document.createElement('span');
+      name.className = 'operator-name';
+      name.textContent = item.id === 'any' ? 'Any operator' : item.name;
+
+      const availability = document.createElement('span');
+      availability.className = 'operator-availability';
+      availability.textContent = `${item.count.toLocaleString()} numbers`;
+
+      const price = document.createElement('span');
+      price.className = 'operator-price';
+      price.textContent = 'Checking…';
+
+      const info = document.createElement('span');
+      info.className = 'operator-info';
+      info.append(name, availability);
+      card.append(info, price);
+
+      card.addEventListener('click', () => {
+        select.value = item.id;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        wrap.querySelectorAll('.operator-card').forEach((el) => el.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+
+      wrap.appendChild(card);
+
+      getLivePrice(context.country, context.service, item.id).then((priceValue) => {
+        if (stateBySelect.get(select)?.requestId !== requestId) return;
+        const priceEl = card.querySelector('.operator-price');
+        if (priceEl) priceEl.textContent = priceValue == null ? 'Unavailable' : money(priceValue);
+      });
+    });
+
+    stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
+  } catch {
+    if (stateBySelect.get(select)?.requestId !== requestId) return;
+    wrap.innerHTML = '<div class="operator-empty">Unable to load live availability.</div>';
+    stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
+  }
 }
-function sync() {
+
+function sync(force = false) {
   document.querySelectorAll('.panel').forEach((panel) => {
     if (panel.querySelector('h2')?.textContent?.trim() !== 'Buy a Number') return;
-    decorateCountries(panel); hideRetailNotice(panel); const select = panel.querySelector('select'); if (!select) return;
-    const context = getBuyContext(panel); const options = [...select.options].filter((o) => o.value && o.value !== 'Service unavailable');
-    const signature = `${context.country}|${context.service}|${options.map((o) => `${o.value}:${o.textContent}`).join(',')}`;
-    renderOperatorCards(select, context, signature);
-    const wrap = panel.querySelector('[data-litesms-operators]'); if (wrap) wrap.querySelectorAll('.operator-card').forEach((card) => card.classList.toggle('selected', card.dataset.operatorValue === String(select.value)));
+    decorateCountries(panel);
+    hideRetailNotice(panel);
+
+    const select = panel.querySelector('select');
+    if (!select) return;
+
+    const context = getBuyContext(panel);
+    if (!context.country || !context.service) return;
+    loadLiveOperators(select, panel, context, force);
   });
 }
-const observer = new MutationObserver(() => { requestAnimationFrame(sync); });
+
+const observer = new MutationObserver(() => requestAnimationFrame(() => sync(false)));
 observer.observe(document.body, { childList: true, subtree: true });
-setTimeout(sync, 300);
+setTimeout(() => sync(true), 300);
+setInterval(() => sync(true), LIVE_REFRESH_MS);
