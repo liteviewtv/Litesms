@@ -1,6 +1,6 @@
 const SERVICE_LOGOS = {
   whatsapp: ['whatsapp', '25D366'], telegram: ['telegram', '26A5E4'], google: ['google', '4285F4'], gmail: ['gmail', 'EA4335'],
-  instagram: ['instagram', 'E4405F'], facebook: ['facebook', '1877F2'], tiktok: ['tiktok', '000000'], discord: ['discord', '5865F2'],
+  instagram: ['instagram', 'E4405F'], facebook: ['facebook', '1877D2'], tiktok: ['tiktok', '000000'], discord: ['discord', '5865F2'],
   twitter: ['x', '000000'], x: ['x', '000000'], signal: ['signal', '3A76F0'], snapchat: ['snapchat', 'FFFC00'], linkedin: ['linkedin', '0A66C2'],
   microsoft: ['microsoft', '5E5CFF'], outlook: ['microsoftoutlook', '0078D4'], yahoo: ['yahoo', '6001D2'], skype: ['skype', '00AFF0'],
   viber: ['viber', '7360F2'], line: ['line', '00C300'], wechat: ['wechat', '07C160'], kakao: ['kakaotalk', 'FFCD00'], reddit: ['reddit', 'FF4500'],
@@ -74,4 +74,3 @@ function decorateServices() {
 const observer = new MutationObserver(decorateServices);
 observer.observe(document.body, { childList: true, subtree: true });
 setTimeout(decorateServices, 300);
-setInterval(decorateServices, 1000);
