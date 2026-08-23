@@ -7,26 +7,23 @@ const icons = {
 const order = ['Home','Orders','Wallet','Profile'];
 
 function enhanceNavigation() {
-  const nav = document.querySelector('.bottom');
+  const nav = document.querySelector('.bottom-nav');
   if (!nav) return;
   nav.setAttribute('aria-label', 'Main navigation');
-  const links = [...nav.querySelectorAll('a')];
-  links.forEach((link) => {
-    const label = (link.textContent || '').trim().replace(/\s+/g, ' ');
-    const key = order.find((name) => label.toLowerCase().includes(name.toLowerCase())) ||
-      order.find((name) => link.getAttribute('aria-label')?.toLowerCase().includes(name.toLowerCase()));
+  const buttons = [...nav.querySelectorAll('button')];
+  buttons.forEach((button) => {
+    const label = (button.textContent || '').trim().replace(/\s+/g, ' ');
+    const key = order.find((name) => label.toLowerCase().includes(name.toLowerCase()));
     if (!key) return;
-    link.dataset.navigationKey = key;
-    link.setAttribute('aria-label', key);
-    if (link.dataset.navigationEnhanced !== 'true') {
-      link.dataset.navigationEnhanced = 'true';
-      link.innerHTML = `${icons[key]}<span>${key}</span>`;
+    button.dataset.navigationKey = key;
+    button.setAttribute('aria-label', key);
+    if (button.dataset.navigationEnhanced !== 'true') {
+      button.dataset.navigationEnhanced = 'true';
+      button.innerHTML = `${icons[key]}<span>${key}</span>`;
     }
   });
-  const keyed = order.map((key) => links.find((link) => link.dataset.navigationKey === key)).filter(Boolean);
-  if (keyed.length === order.length && keyed.some((link, i) => links[i] !== link)) {
-    keyed.forEach((link) => nav.appendChild(link));
-  }
+  const keyed = order.map((key) => buttons.find((button) => button.dataset.navigationKey === key)).filter(Boolean);
+  if (keyed.length === order.length && keyed.some((button, i) => buttons[i] !== button)) keyed.forEach((button) => nav.appendChild(button));
 }
 
 const observer = new MutationObserver(enhanceNavigation);
