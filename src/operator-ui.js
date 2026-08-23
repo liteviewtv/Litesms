@@ -67,6 +67,11 @@ function hideRetailNotice(panel) {
   });
 }
 
+function parseAvailability(option) {
+  const match = String(option?.textContent || '').match(/·\s*([\d,]+)\s+available/i);
+  return match ? `${match[1]} available` : '';
+}
+
 async function renderOperatorCards(select, context, signature) {
   if (!select || !supabase || renderedSignatures.get(select) === signature) return;
   renderedSignatures.set(select, signature);
@@ -98,21 +103,41 @@ async function renderOperatorCards(select, context, signature) {
   if (!options.length) { wrap.innerHTML = '<div class="operator-empty">Service unavailable, try again later.</div>'; return; }
   wrap.innerHTML = '';
   options.forEach((option) => {
+    const value = String(option.value || 'any');
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = `operator-card${option.value === select.value ? ' selected' : ''}`;
-    const name = option.value === 'any' ? 'Any operator' : option.textContent.replace(/\s+·\s+.*$/, '').trim();
-    card.innerHTML = `<span class="operator-name">${name}</span><span class="operator-price">Checking…</span>`;
+    card.className = `operator-card${value === select.value ? ' selected' : ''}`;
+    card.dataset.operatorValue = value;
+
+    const info = document.createElement('span');
+    info.className = 'operator-info';
+    const name = document.createElement('span');
+    name.className = 'operator-name';
+    name.textContent = value === 'any' ? 'Any operator' : String(option.textContent || '').replace(/\s+·\s+.*$/, '').trim();
+    info.appendChild(name);
+    const availability = parseAvailability(option);
+    if (availability) {
+      const availabilityEl = document.createElement('span');
+      availabilityEl.className = 'operator-availability';
+      availabilityEl.textContent = availability;
+      info.appendChild(availabilityEl);
+    }
+
+    const price = document.createElement('span');
+    price.className = 'operator-price';
+    price.textContent = 'Checking…';
+    card.append(info, price);
+
     card.addEventListener('click', () => {
-      select.value = option.value;
+      select.value = value;
       select.dispatchEvent(new Event('change', { bubbles: true }));
       wrap.querySelectorAll('.operator-card').forEach((el) => el.classList.remove('selected'));
       card.classList.add('selected');
     });
     wrap.appendChild(card);
-    getPrice(context.country, context.service, option.value).then((price) => {
+    getPrice(context.country, context.service, value).then((priceValue) => {
       const priceEl = card.querySelector('.operator-price');
-      if (priceEl) priceEl.textContent = price == null ? 'Unavailable' : money(price);
+      if (priceEl) priceEl.textContent = priceValue == null ? 'Unavailable' : money(priceValue);
     });
   });
 }
@@ -126,14 +151,15 @@ function sync() {
     if (!select) return;
     const context = getBuyContext(panel);
     const options = [...select.options].filter((o) => o.value && o.value !== 'Service unavailable');
-    const signature = `${context.country}|${context.service}|${options.map((o) => o.value).join(',')}`;
+    const signature = `${context.country}|${context.service}|${options.map((o) => `${o.value}:${o.textContent}`).join(',')}`;
     renderOperatorCards(select, context, signature);
     const wrap = panel.querySelector('[data-litesms-operators]');
-    if (wrap) wrap.querySelectorAll('.operator-card').forEach((card) => card.classList.toggle('selected', card.textContent.split('₦')[0].trim() === (select.value === 'any' ? 'Any operator' : select.options[select.selectedIndex]?.textContent?.replace(/\s+·\s+.*$/,'').trim())));
+    if (wrap) wrap.querySelectorAll('.operator-card').forEach((card) => card.classList.toggle('selected', card.dataset.operatorValue === String(select.value)));
   });
 }
 
-const observer = new MutationObserver(sync);
-observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-setInterval(sync, 1000);
+const observer = new MutationObserver(() => {
+  requestAnimationFrame(sync);
+});
+observer.observe(document.body, { childList: true, subtree: true });
 setTimeout(sync, 300);
