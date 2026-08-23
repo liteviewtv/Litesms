@@ -28,13 +28,13 @@
             holder.appendChild(availability);
           }
         }
-        availability.textContent = `${count} available`;
+        const nextText = `${count} available`;
+        if (availability.textContent !== nextText) availability.textContent = nextText;
       });
     });
   }
 
   const observer = new MutationObserver(refreshOperatorAvailability);
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  observer.observe(document.body, { childList: true, subtree: true });
   setTimeout(refreshOperatorAvailability, 500);
-  setInterval(refreshOperatorAvailability, 1000);
 })();
