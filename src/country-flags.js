@@ -24,6 +24,8 @@ function applyCountryFlags() {
       flagNode.className = 'country-flag';
       flagNode.textContent = flag;
       flagNode.setAttribute('aria-hidden', 'true');
+      flagNode.style.marginRight = '8px';
+      flagNode.style.fontSize = '18px';
       button.prepend(flagNode);
     });
   });
