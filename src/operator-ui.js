@@ -41,19 +41,6 @@ function hideRetailNotice(panel) {
   });
 }
 
-async function getLivePrice(country, service, operator) {
-  try {
-    const { data, error } = await supabase.functions.invoke('fivesim-catalog', {
-      body: { action: 'price', country, service, operator }
-    });
-    if (error || data?.error) throw new Error('price unavailable');
-    const price = Number(data?.data?.retail_price_ngn);
-    return Number.isFinite(price) ? price : null;
-  } catch {
-    return null;
-  }
-}
-
 async function loadLiveOperators(select, panel, context, force = false) {
   if (!select || !supabase) return;
   const key = `${context.country}|${context.service}`;
@@ -78,17 +65,17 @@ async function loadLiveOperators(select, panel, context, force = false) {
     const { data, error } = await supabase.functions.invoke('fivesim-catalog', {
       body: { action: 'operators', country: context.country, service: context.service }
     });
-    if (error || data?.error) throw new Error('operators unavailable');
-
-    const incoming = Array.isArray(data?.data) ? data.data : [];
+    if (error || data?.error) throw new Error(data?.error || 'operators unavailable');
     if (stateBySelect.get(select)?.requestId !== requestId) return;
 
+    const incoming = Array.isArray(data?.data) ? data.data : [];
     const operators = incoming
       .filter((item) => item && item.id && Number(item.count) > 0)
       .map((item) => ({
         id: String(item.id).toLowerCase(),
         name: item.name || item.id,
-        count: Number(item.count) || 0
+        count: Number(item.count) || 0,
+        retailPrice: Number(item.retail_price_ngn)
       }));
 
     const anyIndex = operators.findIndex((item) => item.id === 'any');
@@ -124,7 +111,7 @@ async function loadLiveOperators(select, panel, context, force = false) {
 
       const price = document.createElement('span');
       price.className = 'operator-price';
-      price.textContent = 'Checking…';
+      price.textContent = Number.isFinite(item.retailPrice) ? money(item.retailPrice) : 'Unavailable';
 
       const info = document.createElement('span');
       info.className = 'operator-info';
@@ -139,12 +126,6 @@ async function loadLiveOperators(select, panel, context, force = false) {
       });
 
       wrap.appendChild(card);
-
-      getLivePrice(context.country, context.service, item.id).then((priceValue) => {
-        if (stateBySelect.get(select)?.requestId !== requestId) return;
-        const priceEl = card.querySelector('.operator-price');
-        if (priceEl) priceEl.textContent = priceValue == null ? 'Unavailable' : money(priceValue);
-      });
     });
 
     stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
