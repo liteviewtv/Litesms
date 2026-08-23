@@ -67,39 +67,11 @@ function hideRetailNotice(panel) {
   });
 }
 
-function normalizeOperatorOptions(select) {
-  const options = [...select.options];
-  let anyOption = null;
-  options.forEach((option) => {
-    const value = String(option.value || '').trim().toLowerCase();
-    const text = String(option.textContent || '').trim().toLowerCase();
-    const isAny = value === 'any' || value === 'any_operator' || value === 'anyoperator' || text === 'any operator';
-    if (!isAny) return;
-    if (!anyOption) {
-      anyOption = option;
-      anyOption.value = 'any';
-      anyOption.textContent = 'Any operator';
-    } else {
-      option.remove();
-    }
-  });
-  if (!anyOption) {
-    anyOption = document.createElement('option');
-    anyOption.value = 'any';
-    anyOption.textContent = 'Any operator';
-    select.insertBefore(anyOption, select.firstChild);
-  } else if (select.firstElementChild !== anyOption) {
-    select.insertBefore(anyOption, select.firstChild);
-  }
-  return anyOption;
-}
-
 async function renderOperatorCards(select, context, signature) {
   if (!select || !supabase || signature === lastSignature) return;
   lastSignature = signature;
   const panel = select.closest('.panel');
   if (!panel) return;
-  normalizeOperatorOptions(select);
   select.style.display = 'none';
   let wrap = panel.querySelector('[data-litesms-operators]');
   if (!wrap) {
@@ -108,7 +80,21 @@ async function renderOperatorCards(select, context, signature) {
     wrap.className = 'operator-cards';
     select.insertAdjacentElement('afterend', wrap);
   }
-  const options = [...select.options].filter((option) => option.value && option.value !== 'Service unavailable');
+  const rawOptions = [...select.options].filter((option) => option.value && option.value !== 'Service unavailable');
+  const options = [];
+  let anyOption = null;
+  rawOptions.forEach((option) => {
+    const value = String(option.value || '').trim().toLowerCase();
+    const text = String(option.textContent || '').trim().toLowerCase();
+    const isAny = value === 'any' || value === 'any_operator' || value === 'anyoperator' || text === 'any operator';
+    if (isAny) {
+      if (!anyOption) anyOption = option;
+      return;
+    }
+    options.push(option);
+  });
+  if (anyOption) options.unshift(anyOption);
+  else options.unshift({ value: 'any', textContent: 'Any operator' });
   if (!options.length) { wrap.innerHTML = '<div class="operator-empty">Service unavailable, try again later.</div>'; return; }
   wrap.innerHTML = '';
   options.forEach((option) => {
@@ -138,7 +124,6 @@ function sync() {
   hideRetailNotice(buyPanel);
   const select = buyPanel.querySelector('select');
   if (!select) return;
-  normalizeOperatorOptions(select);
   const context = getBuyContext(buyPanel);
   const options = [...select.options].filter((o) => o.value && o.value !== 'Service unavailable');
   const signature = `${context.country}|${context.service}|${options.map((o) => o.value).join(',')}`;
