@@ -6,7 +6,7 @@ const normalize = (value) => String(value || '').trim().toLowerCase().replace(/[
 const emoji = (code) => [...String(code || '').toUpperCase()].map(c => String.fromCodePoint(127397 + c.charCodeAt(0))).join('');
 
 function countryFlag(name) {
-  const key = normalize(name);
+  const key = normalize(String(name || '').replace(/^[^\p{L}\p{N}]+/u, ''));
   return FLAG_CODES[key] ? emoji(FLAG_CODES[key]) : '';
 }
 
@@ -15,9 +15,14 @@ function applyCountryFlags() {
     const heading = label.firstChild;
     if (!heading || String(heading.textContent || '').trim().toLowerCase() !== 'country') return;
     label.querySelectorAll('.choice-list .choice-chip').forEach((button) => {
-      if (button.dataset.countryFlagApplied === '1') return;
       const text = String(button.textContent || '').trim();
-      const flag = countryFlag(text);
+      const key = normalize(text.replace(/^[^\p{L}\p{N}]+/u, ''));
+      if (FLAG_CODES[key]) {
+        button.dataset.countryId = key;
+        button.dataset.countryDecorated = 'true';
+      }
+      if (button.dataset.countryFlagApplied === '1') return;
+      const flag = FLAG_CODES[key] ? emoji(FLAG_CODES[key]) : '';
       if (!flag) return;
       button.dataset.countryFlagApplied = '1';
       const flagNode = document.createElement('span');
