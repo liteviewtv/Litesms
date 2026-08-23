@@ -14,14 +14,13 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx?v=202608230120"></script>
     <script type="module">
-      // Load non-critical UI enhancements after the main React app has started.
-      // A failure in an enhancement must never prevent the Mini App from booting.
       const loadEnhancements = () => {
         Promise.allSettled([
           import('/src/operator-ui.js?v=202608231600'),
           import('/src/service-ui.js?v=202608231450'),
           import('/src/navigation-ui.js?v=202608231450'),
-          import('/src/country-flags.js?v=202608231610')
+          import('/src/country-flags.js?v=202608231610'),
+          import('/src/admin-ui.js?v=202608231750')
         ]);
       };
       if (document.readyState === 'loading') {
