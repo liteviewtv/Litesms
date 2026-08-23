@@ -1,8 +1,8 @@
 import { supabase } from './lib/supabase';
 
 const PRICE_REFRESH_MS = 30000;
-let lastSelect = null;
-let priceCache = new Map();
+let lastSignature = '';
+const priceCache = new Map();
 
 const money = (value) => {
   const n = Number(value);
@@ -28,16 +28,29 @@ async function getPrice(country, service, operator) {
   }
 }
 
-function getBuyContext(select) {
-  const panel = select.closest('.panel');
-  if (!panel) return null;
-  const text = panel.innerText || '';
-  const countryMatch = text.match(/Country[\s\S]*?([A-Za-z]{2,})\s*Service/);
-  const serviceMatch = text.match(/Service[\s\S]*?([A-Za-z0-9_-]+)\s*Operator/);
-  return {
-    country: countryMatch?.[1]?.trim() || '',
-    service: serviceMatch?.[1]?.trim() || ''
+function slug(value) {
+  const map = {
+    'united states': 'usa',
+    'united kingdom': 'uk',
+    'great britain': 'uk',
+    'canada': 'canada',
+    'australia': 'australia',
+    'germany': 'germany',
+    'france': 'france',
+    'nigeria': 'nigeria',
+    'india': 'india',
+    'italy': 'italy',
+    'spain': 'spain'
   };
+  const normalized = String(value || '').trim().toLowerCase();
+  return map[normalized] || normalized.replace(/\s+/g, '_');
+}
+
+function getBuyContext(panel) {
+  const lists = [...panel.querySelectorAll('.choice-list')];
+  const country = lists[0]?.querySelector('.choice-chip.selected')?.textContent?.trim() || '';
+  const service = lists[1]?.querySelector('.choice-chip.selected')?.textContent?.trim() || '';
+  return { country: slug(country), service: slug(service) };
 }
 
 function hideRetailNotice(panel) {
@@ -47,9 +60,9 @@ function hideRetailNotice(panel) {
   });
 }
 
-async function renderOperatorCards(select) {
-  if (!select || select === lastSelect || !supabase) return;
-  lastSelect = select;
+async function renderOperatorCards(select, context, signature) {
+  if (!select || !supabase || signature === lastSignature) return;
+  lastSignature = signature;
   const panel = select.closest('.panel');
   if (!panel) return;
 
@@ -68,13 +81,13 @@ async function renderOperatorCards(select) {
     return;
   }
 
-  const context = getBuyContext(select) || {};
   wrap.innerHTML = '';
   options.forEach((option) => {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = `operator-card${option.value === select.value ? ' selected' : ''}`;
-    card.innerHTML = `<span class="operator-name">${option.textContent.replace(/\s+·\s+.*$/, '')}</span><span class="operator-price">Checking…</span>`;
+    const name = option.textContent.replace(/\s+·\s+.*$/, '').trim();
+    card.innerHTML = `<span class="operator-name">${name}</span><span class="operator-price">Checking…</span>`;
     card.addEventListener('click', () => {
       select.value = option.value;
       select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -93,13 +106,17 @@ async function renderOperatorCards(select) {
 function sync() {
   const buyPanel = [...document.querySelectorAll('.panel')].find((panel) => panel.querySelector('h2')?.textContent?.trim() === 'Buy a Number');
   if (!buyPanel) return;
-  const select = buyPanel.querySelector('select');
-  if (select) renderOperatorCards(select);
   hideRetailNotice(buyPanel);
-  if (select) {
-    const wrap = buyPanel.querySelector('[data-litesms-operators]');
-    if (wrap) wrap.querySelectorAll('.operator-card').forEach((card, index) => card.classList.toggle('selected', [...select.options].filter(o => o.value && o.value !== 'any')[index]?.value === select.value));
-  }
+  const select = buyPanel.querySelector('select');
+  if (!select) return;
+
+  const context = getBuyContext(buyPanel);
+  const options = [...select.options].filter((o) => o.value && o.value !== 'any' && o.value !== 'Service unavailable');
+  const signature = `${context.country}|${context.service}|${options.map((o) => o.value).join(',')}`;
+  renderOperatorCards(select, context, signature);
+
+  const wrap = buyPanel.querySelector('[data-litesms-operators]');
+  if (wrap) wrap.querySelectorAll('.operator-card').forEach((card, index) => card.classList.toggle('selected', options[index]?.value === select.value));
 }
 
 const observer = new MutationObserver(sync);
