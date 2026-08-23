@@ -45,10 +45,11 @@ async function loadLiveOperators(select, panel, context, force = false) {
   if (!select || !supabase) return;
   const key = `${context.country}|${context.service}`;
   const current = stateBySelect.get(select) || {};
-  if (!force && current.contextKey === key && current.loaded) return;
+  if (!force && current.contextKey === key && (current.loading || current.loaded)) return;
+  if (force && current.contextKey === key && current.loading) return;
 
   const requestId = (current.requestId || 0) + 1;
-  stateBySelect.set(select, { ...current, contextKey: key, requestId, loaded: false });
+  stateBySelect.set(select, { contextKey: key, requestId, loading: true, loaded: false });
   select.style.display = 'none';
 
   let wrap = panel.querySelector('[data-litesms-operators]');
@@ -86,7 +87,7 @@ async function loadLiveOperators(select, panel, context, force = false) {
 
     if (!operators.length) {
       wrap.innerHTML = '<div class="operator-empty">Service unavailable, try again later.</div>';
-      stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
+      stateBySelect.set(select, { contextKey: key, requestId, loading: false, loaded: true });
       return;
     }
 
@@ -128,11 +129,11 @@ async function loadLiveOperators(select, panel, context, force = false) {
       wrap.appendChild(card);
     });
 
-    stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
+    stateBySelect.set(select, { contextKey: key, requestId, loading: false, loaded: true });
   } catch {
     if (stateBySelect.get(select)?.requestId !== requestId) return;
     wrap.innerHTML = '<div class="operator-empty">Unable to load live availability.</div>';
-    stateBySelect.set(select, { contextKey: key, requestId, loaded: true });
+    stateBySelect.set(select, { contextKey: key, requestId, loading: false, loaded: true });
   }
 }
 
