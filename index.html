@@ -12,23 +12,17 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx?v=202608230120"></script>
+    <script type="module" src="/src/main.jsx?v=202608231800"></script>
     <script type="module">
       const loadEnhancements = () => {
         Promise.allSettled([
           import('/src/operator-ui.js?v=202608231600'),
           import('/src/service-ui.js?v=202608231450'),
-          import('/src/navigation-ui.js?v=202608231450'),
-          import('/src/country-flags.js?v=202608231610'),
-          import('/src/admin-ui.js?v=202608231750')
+          import('/src/country-flags.js?v=202608231610')
         ]);
       };
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(loadEnhancements, 0), { once: true });
-      } else {
-        setTimeout(loadEnhancements, 0);
-      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(loadEnhancements, 0), { once: true });
+      else setTimeout(loadEnhancements, 0);
     </script>
-    <link rel="stylesheet" href="/src/navigation.css?v=202608231405" />
   </body>
 </html>
