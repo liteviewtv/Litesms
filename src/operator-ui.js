@@ -1,7 +1,7 @@
 import { supabase } from './lib/supabase';
 
 const PRICE_REFRESH_MS = 30000;
-let lastSignature = '';
+const renderedSignatures = new WeakMap();
 const priceCache = new Map();
 const flagMap = {
   afghanistan:'🇦🇫',albania:'🇦🇱',algeria:'🇩🇿',angola:'🇦🇴',argentina:'🇦🇷',armenia:'🇦🇲',aruba:'🇦🇼',australia:'🇦🇺',austria:'🇦🇹',azerbaijan:'🇦🇿',bahamas:'🇧🇸',bahrain:'🇧🇭',bangladesh:'🇧🇩',barbados:'🇧🇧',belarus:'🇧🇾',belgium:'🇧🇪',belize:'🇧🇿',benin:'🇧🇯',bhutane:'🇧🇹',bih:'🇧🇦',bolivia:'🇧🇴',botswana:'🇧🇼',brazil:'🇧🇷',bulgaria:'🇧🇬',burkinafaso:'🇧🇫',burundi:'🇧🇮',cambodia:'🇰🇭',cameroon:'🇨🇲',canada:'🇨🇦',capeverde:'🇨🇻',chad:'🇹🇩',chile:'🇨🇱',colombia:'🇨🇴',comoros:'🇰🇲',congo:'🇨🇬',costarica:'🇨🇷',croatia:'🇭🇷',cyprus:'🇨🇾',czech:'🇨🇿',denmark:'🇩🇰',djibouti:'🇩🇯',dominicana:'🇩🇴',easttimor:'🇹🇱',ecuador:'🇪🇨',egypt:'🇪🇬',england:'🇬🇧',equatorialguinea:'🇬🇶',estonia:'🇪🇪',ethiopia:'🇪🇹',finland:'🇫🇮',france:'🇫🇷',frenchguiana:'🇬🇫',gabon:'🇬🇦',gambia:'🇬🇲',georgia:'🇬🇪',germany:'🇩🇪',ghana:'🇬🇭',greece:'🇬🇷',guadeloupe:'🇬🇵',guatemala:'🇬🇹',guinea:'🇬🇳',guineabissau:'🇬🇼',guyana:'🇬🇾',haiti:'🇭🇹',honduras:'🇭🇳',hongkong:'🇭🇰',hungary:'🇭🇺',india:'🇮🇳',indonesia:'🇮🇩',ireland:'🇮🇪',israel:'🇮🇱',italy:'🇮🇹',ivorycoast:'🇨🇮',jamaica:'🇯🇲',jordan:'🇯🇴',kazakhstan:'🇰🇿',kenya:'🇰🇪',kuwait:'🇰🇼',kyrgyzstan:'🇰🇬',laos:'🇱🇦',latvia:'🇱🇻',lesotho:'🇱🇸',liberia:'🇱🇷',lithuania:'🇱🇹',luxembourg:'🇱🇺',macau:'🇲🇴',madagascar:'🇲🇬',malawi:'🇲🇼',malaysia:'🇲🇾',maldives:'🇲🇻',mauritania:'🇲🇷',mauritius:'🇲🇺',mexico:'🇲🇽',moldova:'🇲🇩',mongolia:'🇲🇳',montenegro:'🇲🇪',morocco:'🇲🇦',mozambique:'🇲🇿',namibia:'🇳🇦',nepal:'🇳🇵',netherlands:'🇳🇱',newcaledonia:'🇳🇨',nicaragua:'🇳🇮',nigeria:'🇳🇬',northmacedonia:'🇲🇰',norway:'🇳🇴',oman:'🇴🇲',pakistan:'🇵🇰',panama:'🇵🇦',papuanewguinea:'🇵🇬',paraguay:'🇵🇾',peru:'🇵🇪',philippines:'🇵🇭',poland:'🇵🇱',portugal:'🇵🇹',puertorico:'🇵🇷',reunion:'🇷🇪',romania:'🇷🇴',rwanda:'🇷🇼',saintkittsandnevis:'🇰🇳',saintlucia:'🇱🇨',saintvincentandthegrenadines:'🇻🇨',salvador:'🇸🇻',saudiarabia:'🇸🇦',senegal:'🇸🇳',serbia:'🇷🇸',seychelles:'🇸🇨',sierraleone:'🇸🇱',slovakia:'🇸🇰',slovenia:'🇸🇮',solomonislands:'🇸🇧',southafrica:'🇿🇦',spain:'🇪🇸',srilanka:'🇱🇰',suriname:'🇸🇷',swaziland:'🇸🇿',sweden:'🇸🇪',switzerland:'🇨🇭',taiwan:'🇹🇼',tajikistan:'🇹🇯',tanzania:'🇹🇿',thailand:'🇹🇭',togo:'🇹🇬',trinidadandtobago:'🇹🇹',tunisia:'🇹🇳',turkmenistan:'🇹🇲',uganda:'🇺🇬',uk:'🇬🇧',uruguay:'🇺🇾',usa:'🇺🇸',uzbekistan:'🇺🇿',venezuela:'🇻🇪',vietnam:'🇻🇳',zambia:'🇿🇲'
@@ -68,8 +68,8 @@ function hideRetailNotice(panel) {
 }
 
 async function renderOperatorCards(select, context, signature) {
-  if (!select || !supabase || signature === lastSignature) return;
-  lastSignature = signature;
+  if (!select || !supabase || renderedSignatures.get(select) === signature) return;
+  renderedSignatures.set(select, signature);
   const panel = select.closest('.panel');
   if (!panel) return;
   select.style.display = 'none';
@@ -118,18 +118,19 @@ async function renderOperatorCards(select, context, signature) {
 }
 
 function sync() {
-  const buyPanel = [...document.querySelectorAll('.panel')].find((panel) => panel.querySelector('h2')?.textContent?.trim() === 'Buy a Number');
-  if (!buyPanel) return;
-  decorateCountries(buyPanel);
-  hideRetailNotice(buyPanel);
-  const select = buyPanel.querySelector('select');
-  if (!select) return;
-  const context = getBuyContext(buyPanel);
-  const options = [...select.options].filter((o) => o.value && o.value !== 'Service unavailable');
-  const signature = `${context.country}|${context.service}|${options.map((o) => o.value).join(',')}`;
-  renderOperatorCards(select, context, signature);
-  const wrap = buyPanel.querySelector('[data-litesms-operators]');
-  if (wrap) wrap.querySelectorAll('.operator-card').forEach((card) => card.classList.toggle('selected', card.textContent.split('₦')[0].trim() === (select.value === 'any' ? 'Any operator' : select.options[select.selectedIndex]?.textContent?.replace(/\s+·\s+.*$/,'').trim())));
+  document.querySelectorAll('.panel').forEach((panel) => {
+    if (panel.querySelector('h2')?.textContent?.trim() !== 'Buy a Number') return;
+    decorateCountries(panel);
+    hideRetailNotice(panel);
+    const select = panel.querySelector('select');
+    if (!select) return;
+    const context = getBuyContext(panel);
+    const options = [...select.options].filter((o) => o.value && o.value !== 'Service unavailable');
+    const signature = `${context.country}|${context.service}|${options.map((o) => o.value).join(',')}`;
+    renderOperatorCards(select, context, signature);
+    const wrap = panel.querySelector('[data-litesms-operators]');
+    if (wrap) wrap.querySelectorAll('.operator-card').forEach((card) => card.classList.toggle('selected', card.textContent.split('₦')[0].trim() === (select.value === 'any' ? 'Any operator' : select.options[select.selectedIndex]?.textContent?.replace(/\s+·\s+.*$/,'').trim())));
+  });
 }
 
 const observer = new MutationObserver(sync);
