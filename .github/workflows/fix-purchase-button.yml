@@ -2,6 +2,8 @@ name: Fix purchase button
 on:
   push:
     branches: [main]
+  issues:
+    types: [opened]
 permissions:
   contents: write
 jobs:
