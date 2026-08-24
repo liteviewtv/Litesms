@@ -7,3 +7,12 @@ section.panel:has(.choice-list)>label:nth-of-type(1) .choice-list,section.panel:
 section.panel:has(.choice-list)>label:nth-of-type(3){margin-top:6px}
 section.panel:has(.choice-list)>button.primary{position:sticky;bottom:92px;z-index:12;margin-top:4px;box-shadow:0 8px 20px #16a34a55,0 -10px 18px rgba(255,255,255,.95)}
 @media(max-width:420px){section.panel:has(.choice-list){column-gap:8px;padding-bottom:112px}section.panel:has(.choice-list)>label:nth-of-type(1) .choice-list,section.panel:has(.choice-list)>label:nth-of-type(2) .choice-list{max-height:140px}.choice-chip{min-height:40px;padding:8px 9px;font-size:13px}}
+/* Profile page polish; the existing admin button remains untouched */
+section.panel:has(>button.secondary){padding:22px 0 18px}
+section.panel:has(>button.secondary)>h2{margin:0 0 18px;padding:20px 18px;border-radius:20px;background:linear-gradient(135deg,#ecfdf5 0%,#eff6ff 100%);border:1px solid #dbeafe;color:#09243e;font-size:26px;line-height:1.1;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+section.panel:has(>button.secondary)>p:first-of-type{margin:0;padding:18px;border:1px solid #e3edf5;border-radius:16px 16px 8px 8px;background:#fbfdff;color:#12324a;font-size:18px;line-height:1.35;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+section.panel:has(>button.secondary)>p:nth-of-type(2){margin:0;padding:12px 18px;border:1px solid #e3edf5;border-top:0;border-radius:8px 8px 16px 16px;background:#fff;color:#61758a;font-size:13px;word-break:break-word}
+section.panel:has(>button.secondary)>button.secondary{width:100%;margin-top:18px;padding:14px 16px;border:1px solid #16a34a;border-radius:14px;background:#fff;color:#15803d;font-size:15px;font-weight:800;box-shadow:0 5px 16px rgba(22,163,74,.08);cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .15s ease}
+section.panel:has(>button.secondary)>button.secondary:hover{background:#ecfdf3;border-color:#15803d}
+section.panel:has(>button.secondary)>button.secondary:active{transform:scale(.99)}
+@media(max-width:420px){section.panel:has(>button.secondary)>h2{font-size:24px;padding:18px 16px}section.panel:has(>button.secondary)>p:first-of-type{font-size:17px;padding:16px}section.panel:has(>button.secondary)>p:nth-of-type(2){padding:11px 16px}}
