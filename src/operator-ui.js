@@ -70,19 +70,13 @@ async function loadLiveOperators(select, panel, context, force = false) {
 
     const incoming = Array.isArray(data?.data) ? data.data : [];
     const operators = incoming
-      .filter((item) => item && item.id && Number(item.count) > 0)
+      .filter((item) => item && item.id && String(item.id).toLowerCase() !== 'any' && Number(item.count) > 0)
       .map((item) => ({
         id: String(item.id).toLowerCase(),
         name: item.name || item.id,
         count: Number(item.count) || 0,
         retailPrice: Number(item.retail_price_ngn)
       }));
-
-    const anyIndex = operators.findIndex((item) => item.id === 'any');
-    if (anyIndex > 0) {
-      const [any] = operators.splice(anyIndex, 1);
-      operators.unshift(any);
-    }
 
     if (!operators.length) {
       wrap.innerHTML = '<div class="operator-empty">Service unavailable, try again later.</div>';
@@ -103,7 +97,7 @@ async function loadLiveOperators(select, panel, context, force = false) {
 
       const name = document.createElement('span');
       name.className = 'operator-name';
-      name.textContent = item.id === 'any' ? 'Any operator' : item.name;
+      name.textContent = item.name;
 
       const availability = document.createElement('span');
       availability.className = 'operator-availability';
