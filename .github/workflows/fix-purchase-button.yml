@@ -1,0 +1,46 @@
+name: Fix purchase button
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch main.jsx
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/main.jsx')
+          s=p.read_text()
+          old="""catch{if(!cancelled){setProviderPrice(null);setRetailPrice(null);setMessage('Service unavailable, try again later.')}}finally{if(!cancelled)setPriceLoading(false)}})();"""
+          new="""catch(e){if(!cancelled){setProviderPrice(null);setRetailPrice(null);setMessage(e?.message||'Price unavailable — Retry')}}finally{if(!cancelled)setPriceLoading(false)}})();"""
+          if old not in s: raise SystemExit('price catch pattern not found')
+          s=s.replace(old,new,1)
+          old="""const buyNumber=async()=>{if(retailPrice==null){setMessage('Service unavailable, try again later.');return}if(Number(wallet?.balance||0)<retailPrice){setMessage(`You need ₦${retailPrice.toLocaleString()} to purchase this number.`);setTab('wallet');return}setBuying(true);setMessage('');try{const t=window.Telegram?.WebApp;const {data,error}=await supabase.functions.invoke('fivesim-order',{body:{initData:t?.initData,country,service,operator}});if(error){let detail='Purchase failed.';try{const body=await error.context?.json();if(body?.error)detail=body.error}catch{}throw new Error(detail)}if(data?.error)throw new Error(data.error);setMessage(`Number purchased: +${data.order.phone_number}`);await loadData(profile.id);setTab('orders')}catch{setProviderPrice(null);setRetailPrice(null);setMessage('Service unavailable, try again later.')}finally{setBuying(false)}};"""
+          new="""const buyNumber=async()=>{if(priceLoading){setMessage('Checking price…');return}if(retailPrice==null){setMessage('Price unavailable — Retry');return}if(Number(wallet?.balance||0)<retailPrice){setMessage(`Insufficient wallet balance. You need ₦${retailPrice.toLocaleString()}.`);return}setBuying(true);setMessage('');try{const t=window.Telegram?.WebApp;if(!t?.initData)throw new Error('Missing Telegram authentication. Open Litesms inside Telegram.');const {data,error}=await supabase.functions.invoke('fivesim-order',{body:{initData:t.initData,country,service,operator}});if(error){let detail=error.message||'Purchase failed.';try{const body=await error.context?.json();if(body?.error)detail=body.error;else if(body?.message)detail=body.message}catch{}throw new Error(detail)}if(data?.error)throw new Error(data.error);if(!data?.order)throw new Error('Purchase completed but no order was returned.');setMessage(`Number purchased: +${data.order.phone_number}`);await loadData(profile.id);setTab('orders')}catch(e){setMessage(e?.message||'Purchase failed.')}finally{setBuying(false)}};"""
+          if old not in s: raise SystemExit('buyNumber pattern not found')
+          s=s.replace(old,new,1)
+          old="""<button className=\"primary\" disabled={buying||providerStatus!=='connected'||retailPrice==null||priceLoading||Number(wallet?.balance||0)<Number(retailPrice||0)} onClick={buyNumber}>{buying?'Purchasing…':'Purchase Number'}</button>"""
+          new="""<button className=\"primary\" disabled={buying||providerStatus!=='connected'} onClick={buyNumber}>{buying?'Purchasing…':priceLoading?'Checking price…':retailPrice!=null?`Purchase Number · ₦${retailPrice.toLocaleString()}`:'Price unavailable — Retry'}</button>"""
+          if old not in s: raise SystemExit('button pattern not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+      - name: Commit patch and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.jsx
+          git commit -m "Fix purchase button error handling and price state"
+          git rm .github/workflows/fix-purchase-button.yml
+          git commit -m "Remove temporary purchase fix workflow"
+          git push
