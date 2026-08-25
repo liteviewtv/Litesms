@@ -32,6 +32,14 @@ export function ensureExchangeRateCard(root) {
       <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
       <div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div>
       <div class="row"><span>Total Invested</span><b data-fivesim-total-invested>Checking…</b></div>
+      <div style="margin-top:12px">
+        <button class="close" type="button" data-fivesim-deposit>Deposit to 5SIM</button>
+        <span class="muted" data-fivesim-deposit-status style="margin-left:8px"></span>
+      </div>
+      <div data-fivesim-payment-panel style="display:none;margin-top:12px">
+        <div class="muted" style="margin-bottom:8px">5SIM payment page</div>
+        <iframe data-fivesim-payment-frame title="5SIM payment" src="about:blank" style="width:100%;height:620px;border:1px solid #e2e8f0;border-radius:12px;background:#fff"></iframe>
+      </div>
       <div class="muted" data-fivesim-status style="margin-top:6px"></div>
     </div>
   `;
@@ -48,6 +56,10 @@ export function ensureExchangeRateCard(root) {
   const lastDepositEl = card.querySelector('[data-fivesim-last-deposit]');
   const totalInvestedEl = card.querySelector('[data-fivesim-total-invested]');
   const balanceStatus = card.querySelector('[data-fivesim-status]');
+  const depositButton = card.querySelector('[data-fivesim-deposit]');
+  const paymentPanel = card.querySelector('[data-fivesim-payment-panel]');
+  const paymentFrame = card.querySelector('[data-fivesim-payment-frame]');
+  const depositStatus = card.querySelector('[data-fivesim-deposit-status]');
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
   const load = async () => {
@@ -139,6 +151,13 @@ export function ensureExchangeRateCard(root) {
     } finally {
       markupSave.disabled = false;
     }
+  };
+
+  depositButton.onclick = () => {
+    depositStatus.textContent = 'Loading 5SIM payment page…';
+    depositStatus.style.color = '';
+    paymentPanel.style.display = 'block';
+    paymentFrame.src = 'https://5sim.net/payment';
   };
 
   load();
