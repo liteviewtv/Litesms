@@ -2,7 +2,7 @@ import { supabase } from './lib/supabase';
 
 const CARD_ID = 'litesms-exchange-rate-card';
 
-function ensureCard(root) {
+export function ensureExchangeRateCard(root) {
   const wrap = root?.querySelector('.wrap');
   if (!wrap || wrap.querySelector(`#${CARD_ID}`)) return;
   const card = document.createElement('section');
@@ -69,17 +69,4 @@ function ensureCard(root) {
   };
 
   load();
-}
-
-const observe = () => {
-  const root = document.getElementById('litesms-admin-root');
-  if (!root) return false;
-  ensureCard(root);
-  new MutationObserver(() => ensureCard(root)).observe(root, { childList: true, subtree: true });
-  return true;
-};
-
-if (!observe()) {
-  const timer = setInterval(() => { if (observe()) clearInterval(timer); }, 100);
-  setTimeout(() => clearInterval(timer), 30000);
 }
