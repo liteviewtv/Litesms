@@ -19,8 +19,7 @@
         Promise.allSettled([
           import('/src/operator-ui.js?v=202608231600'),
           import('/src/service-ui.js?v=202608231450'),
-          import('/src/country-flags.js?v=202608231610'),
-          import('/src/orders-categories.js?v=202608231820')
+          import('/src/country-flags.js?v=202608231610')
         ]);
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(loadEnhancements, 0), { once: true });
