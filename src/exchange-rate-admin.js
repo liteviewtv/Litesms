@@ -25,6 +25,14 @@ export function ensureExchangeRateCard(root) {
       <button class="close" type="button" data-markup-save>Save Profit Percentage</button>
       <span class="muted" data-markup-status style="margin-left:8px"></span>
     </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
+      <strong>5SIM Funding</strong>
+      <div class="muted" style="margin-top:4px">Provider funding summary shown in USD only.</div>
+      <div class="row"><span>Current Balance</span><b>$0.3195</b></div>
+      <div class="row"><span>Last Deposit</span><b>$0.49</b></div>
+      <div class="row"><span>Total Invested</span><b>$0.49</b></div>
+    </div>
   `;
 
   settings.appendChild(card);
