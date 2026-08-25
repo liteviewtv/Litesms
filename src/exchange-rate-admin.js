@@ -29,9 +29,10 @@ export function ensureExchangeRateCard(root) {
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
       <strong>5SIM Funding</strong>
       <div class="muted" style="margin-top:4px">Provider funding summary shown in USD only.</div>
-      <div class="row"><span>Current Balance</span><b>$0.3195</b></div>
+      <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
       <div class="row"><span>Last Deposit</span><b>$0.49</b></div>
       <div class="row"><span>Total Invested</span><b>$0.49</b></div>
+      <div class="muted" data-fivesim-status style="margin-top:6px"></div>
     </div>
   `;
 
@@ -43,18 +44,28 @@ export function ensureExchangeRateCard(root) {
   const markupInput = card.querySelector('[data-markup-input]');
   const markupSave = card.querySelector('[data-markup-save]');
   const markupStatus = card.querySelector('[data-markup-status]');
+  const balanceEl = card.querySelector('[data-fivesim-balance]');
+  const balanceStatus = card.querySelector('[data-fivesim-status]');
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
   const load = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', {
-        body: { initData: initData(), action: 'get' }
-      });
+      const [{ data, error }, provider] = await Promise.all([
+        supabase.functions.invoke('litesms-exchange-rate', {
+          body: { initData: initData(), action: 'get' }
+        }),
+        supabase.functions.invoke('litesms-admin', {
+          body: { initData: initData(), action: 'provider_balance' }
+        })
+      ]);
       if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to load pricing settings');
+      if (provider.error || provider.data?.error) throw new Error(provider.data?.error || provider.error?.message || 'Unable to load 5SIM balance');
       fxInput.value = data.rate;
       markupInput.value = Number.isFinite(Number(data.markup_percent)) ? data.markup_percent : 40;
+      balanceEl.textContent = `$${Number(provider.data?.balance).toFixed(4)}`;
       fxStatus.textContent = '';
       markupStatus.textContent = '';
+      balanceStatus.textContent = 'Live balance from 5SIM';
     } catch (e) {
       if (e?.message === 'Admin access required') {
         card.remove();
@@ -64,6 +75,8 @@ export function ensureExchangeRateCard(root) {
       fxStatus.style.color = '#b91c1c';
       markupStatus.textContent = e?.message || 'Unable to load settings';
       markupStatus.style.color = '#b91c1c';
+      balanceStatus.textContent = e?.message || 'Unable to load 5SIM balance';
+      balanceStatus.style.color = '#b91c1c';
     }
   };
 
