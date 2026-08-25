@@ -10,6 +10,14 @@
     <title>Litesms</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/src/navigation.css?v=202608231810" />
+    <style>
+      /* Highlight active/pending orders while keeping completed/closed orders quieter. */
+      .list-card:has(span[style*="rgb(37, 99, 235)"]){
+        border:2px solid #16a34a !important;
+        background:linear-gradient(135deg,#f0fdf4 0%,#eff6ff 100%) !important;
+        box-shadow:0 8px 24px rgba(22,163,74,.14) !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
