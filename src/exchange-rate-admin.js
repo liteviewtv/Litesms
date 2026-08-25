@@ -32,10 +32,7 @@ export function ensureExchangeRateCard(root) {
       <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
       <div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div>
       <div class="row"><span>Total Invested</span><b data-fivesim-total-invested>Checking…</b></div>
-      <div style="margin-top:12px">
-        <button class="close" type="button" data-fivesim-deposit>Deposit to 5SIM</button>
-        <span class="muted" data-fivesim-deposit-status style="margin-left:8px"></span>
-      </div>
+      <div class="muted" data-fivesim-status style="margin-top:6px"></div>
     </div>
   `;
 
@@ -51,7 +48,6 @@ export function ensureExchangeRateCard(root) {
   const lastDepositEl = card.querySelector('[data-fivesim-last-deposit]');
   const totalInvestedEl = card.querySelector('[data-fivesim-total-invested]');
   const balanceStatus = card.querySelector('[data-fivesim-status]');
-  const depositButton = card.querySelector('[data-fivesim-deposit]');
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
   const load = async () => {
@@ -143,19 +139,6 @@ export function ensureExchangeRateCard(root) {
     } finally {
       markupSave.disabled = false;
     }
-  };
-
-  depositButton.onclick = () => {
-    const url = 'https://5sim.net/payment';
-    const telegram = window.Telegram?.WebApp;
-    depositStatus.textContent = 'Opening 5SIM payment page…';
-    depositStatus.style.color = '';
-    if (telegram?.openLink) {
-      telegram.openLink(url);
-    } else {
-      window.location.href = url;
-    }
-    setTimeout(() => { if (depositStatus) depositStatus.textContent = ''; }, 2500);
   };
 
   load();
