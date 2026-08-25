@@ -9,25 +9,18 @@
     <meta http-equiv="Expires" content="0" />
     <title>Litesms</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="/src/navigation.css?v=202608231810" />
-    <style>
-      /* Highlight active/pending orders while keeping completed/closed orders quieter. */
-      .list-card:has(span[style*="rgb(37, 99, 235)"]){
-        border:2px solid #16a34a !important;
-        background:linear-gradient(135deg,#f0fdf4 0%,#eff6ff 100%) !important;
-        box-shadow:0 8px 24px rgba(22,163,74,.14) !important;
-      }
-    </style>
+    <link rel="stylesheet" href="/src/navigation.css?v=202608262000" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx?v=202608231810"></script>
+    <script type="module" src="/src/main.jsx?v=202608262000"></script>
     <script type="module">
       const loadEnhancements = () => {
         Promise.allSettled([
           import('/src/operator-ui.js?v=202608231600'),
           import('/src/service-ui.js?v=202608231450'),
-          import('/src/country-flags.js?v=202608231610')
+          import('/src/country-flags.js?v=202608231610'),
+          import('/src/orders-enhancer.js?v=202608262000')
         ]);
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(loadEnhancements, 0), { once: true });
