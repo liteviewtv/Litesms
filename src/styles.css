@@ -16,3 +16,5 @@ section.panel:has(>button.secondary)>button.secondary{width:100%;margin-top:18px
 section.panel:has(>button.secondary)>button.secondary:hover{background:#ecfdf3;border-color:#15803d}
 section.panel:has(>button.secondary)>button.secondary:active{transform:scale(.99)}
 @media(max-width:420px){section.panel:has(>button.secondary)>h2{font-size:24px;padding:18px 16px}section.panel:has(>button.secondary)>p:first-of-type{font-size:17px;padding:16px}section.panel:has(>button.secondary)>p:nth-of-type(2){padding:11px 16px}}
+/* Hide only the duplicate live-price notice in the Buy Number form. The button remains the single price display. */
+section.panel:has(.choice-list)>div.notice{display:none}
