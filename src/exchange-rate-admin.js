@@ -1,6 +1,6 @@
 import { supabase } from './lib/supabase';
 
-const CARD_ID = 'litesms-exchange-rate-card';
+const CARD_ID = 'litesms-pricing-settings-card';
 
 export function ensureExchangeRateCard(root) {
   const settings = root?.querySelector('#admin-settings-content');
@@ -10,18 +10,31 @@ export function ensureExchangeRateCard(root) {
   card.id = CARD_ID;
   card.className = 'card';
   card.innerHTML = `
-    <strong>USD → NGN Exchange Rate</strong>
-    <div class="muted" style="margin-top:4px">Used for new 5SIM retail-price calculations.</div>
-    <input class="input" type="number" min="0.01" step="0.01" inputmode="decimal" data-fx-input placeholder="Loading…" aria-label="USD to NGN exchange rate">
-    <button class="close" type="button" data-fx-save>Save</button>
-    <span class="muted" data-fx-status style="margin-left:8px"></span>
+    <strong>Pricing Settings</strong>
+    <div class="muted" style="margin-top:4px">These settings apply only to new 5SIM retail-price calculations. Existing orders keep their stored pricing.</div>
+    <div style="margin-top:12px">
+      <label style="display:block;font-weight:700">USD → NGN Exchange Rate</label>
+      <input class="input" type="number" min="0.01" step="0.01" inputmode="decimal" data-fx-input placeholder="Loading…" aria-label="USD to NGN exchange rate">
+      <button class="close" type="button" data-fx-save>Save Exchange Rate</button>
+      <span class="muted" data-fx-status style="margin-left:8px"></span>
+    </div>
+    <div style="margin-top:16px">
+      <label style="display:block;font-weight:700">Profit / Markup Percentage</label>
+      <div class="muted" style="margin-top:4px">Current default: 40%. Example: provider cost × exchange rate × 1.40.</div>
+      <input class="input" type="number" min="0" max="1000" step="0.01" inputmode="decimal" data-markup-input placeholder="Loading…" aria-label="Profit percentage">
+      <button class="close" type="button" data-markup-save>Save Profit Percentage</button>
+      <span class="muted" data-markup-status style="margin-left:8px"></span>
+    </div>
   `;
 
   settings.appendChild(card);
 
-  const input = card.querySelector('[data-fx-input]');
-  const save = card.querySelector('[data-fx-save]');
-  const status = card.querySelector('[data-fx-status]');
+  const fxInput = card.querySelector('[data-fx-input]');
+  const fxSave = card.querySelector('[data-fx-save]');
+  const fxStatus = card.querySelector('[data-fx-status]');
+  const markupInput = card.querySelector('[data-markup-input]');
+  const markupSave = card.querySelector('[data-markup-save]');
+  const markupStatus = card.querySelector('[data-markup-status]');
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
   const load = async () => {
@@ -29,43 +42,74 @@ export function ensureExchangeRateCard(root) {
       const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', {
         body: { initData: initData(), action: 'get' }
       });
-      if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to load exchange rate');
-      input.value = data.rate;
-      status.textContent = '';
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to load pricing settings');
+      fxInput.value = data.rate;
+      markupInput.value = Number.isFinite(Number(data.markup_percent)) ? data.markup_percent : 40;
+      fxStatus.textContent = '';
+      markupStatus.textContent = '';
     } catch (e) {
       if (e?.message === 'Admin access required') {
         card.remove();
         return;
       }
-      status.textContent = e?.message || 'Unable to load rate';
-      status.style.color = '#b91c1c';
+      fxStatus.textContent = e?.message || 'Unable to load settings';
+      fxStatus.style.color = '#b91c1c';
+      markupStatus.textContent = e?.message || 'Unable to load settings';
+      markupStatus.style.color = '#b91c1c';
     }
   };
 
-  save.onclick = async () => {
-    const rate = Number(input.value);
+  fxSave.onclick = async () => {
+    const rate = Number(fxInput.value);
     if (!Number.isFinite(rate) || rate <= 0) {
-      status.textContent = 'Enter a valid rate.';
-      status.style.color = '#b91c1c';
+      fxStatus.textContent = 'Enter a valid rate.';
+      fxStatus.style.color = '#b91c1c';
       return;
     }
-    save.disabled = true;
-    status.textContent = 'Saving…';
-    status.style.color = '';
+    fxSave.disabled = true;
+    fxStatus.textContent = 'Saving…';
+    fxStatus.style.color = '';
     try {
       const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', {
         body: { initData: initData(), action: 'save', rate }
       });
       if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to save exchange rate');
-      input.value = data.rate;
-      status.textContent = 'Saved';
-      status.style.color = '#166534';
-      setTimeout(() => { if (status) status.textContent = ''; }, 1800);
+      fxInput.value = data.rate;
+      fxStatus.textContent = 'Saved';
+      fxStatus.style.color = '#166534';
+      setTimeout(() => { if (fxStatus) fxStatus.textContent = ''; }, 1800);
     } catch (e) {
-      status.textContent = e?.message || 'Unable to save rate';
-      status.style.color = '#b91c1c';
+      fxStatus.textContent = e?.message || 'Unable to save rate';
+      fxStatus.style.color = '#b91c1c';
     } finally {
-      save.disabled = false;
+      fxSave.disabled = false;
+    }
+  };
+
+  markupSave.onclick = async () => {
+    const markup = Number(markupInput.value);
+    if (!Number.isFinite(markup) || markup < 0 || markup > 1000) {
+      markupStatus.textContent = 'Enter a valid percentage.';
+      markupStatus.style.color = '#b91c1c';
+      return;
+    }
+    markupSave.disabled = true;
+    markupStatus.textContent = 'Saving…';
+    markupStatus.style.color = '';
+    try {
+      const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', {
+        body: { initData: initData(), action: 'save_markup', markup }
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to save profit percentage');
+      markupInput.value = data.markup_percent;
+      markupStatus.textContent = 'Saved';
+      markupStatus.style.color = '#166534';
+      setTimeout(() => { if (markupStatus) markupStatus.textContent = ''; }, 1800);
+    } catch (e) {
+      markupStatus.textContent = e?.message || 'Unable to save profit percentage';
+      markupStatus.style.color = '#b91c1c';
+    } finally {
+      markupSave.disabled = false;
     }
   };
 
