@@ -4,7 +4,21 @@ const CARD_ID = 'litesms-exchange-rate-card';
 
 export function ensureExchangeRateCard(root) {
   const wrap = root?.querySelector('.wrap');
-  if (!wrap || wrap.querySelector(`#${CARD_ID}`)) return;
+  if (!wrap) return;
+
+  // The full Admin Dashboard is rendered by AdminLauncher in the main app tree.
+  // Move that existing dashboard content into the existing full-screen admin shell
+  // instead of leaving the shell with only the exchange-rate card visible.
+  const content = root.querySelector('#admin-content');
+  const dashboardContent = [...document.querySelectorAll('.tabs')]
+    .map(el => el.parentElement)
+    .find(el => el && el !== content && !root.contains(el));
+  if (content && dashboardContent && dashboardContent !== content && dashboardContent.parentElement !== content) {
+    content.appendChild(dashboardContent);
+  }
+
+  if (wrap.querySelector(`#${CARD_ID}`)) return;
+
   const card = document.createElement('section');
   card.id = CARD_ID;
   card.className = 'card';
@@ -15,8 +29,9 @@ export function ensureExchangeRateCard(root) {
     <button class="close" type="button" data-fx-save>Save</button>
     <span class="muted" data-fx-status style="margin-left:8px"></span>
   `;
-  const header = wrap.querySelector('.head');
-  header?.insertAdjacentElement('afterend', card) || wrap.prepend(card);
+
+  const target = content || wrap;
+  target.appendChild(card);
 
   const input = card.querySelector('[data-fx-input]');
   const save = card.querySelector('[data-fx-save]');
