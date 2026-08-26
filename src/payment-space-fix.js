@@ -6,7 +6,7 @@ function ensureStyles(){
  if(document.getElementById(STYLE_ID))return;
  const style=document.createElement('style');
  style.id=STYLE_ID;
- style.textContent=`.${HIDDEN_CLASS}{display:none!important}`;
+ style.textContent=`iframe.${HIDDEN_CLASS}{display:none!important}`;
  document.head.appendChild(style);
 }
 
@@ -17,10 +17,11 @@ function isAddFundsTarget(el){
 }
 
 function findPaymentIframe(){
- return [...document.querySelectorAll('iframe')].find(f=>{
+ const frames=[...document.querySelectorAll('section.panel iframe')];
+ return frames.find(f=>{
   const src=String(f.getAttribute('src')||'').toLowerCase();
-  return src.includes('flutterwave')||src.includes('checkout');
- })||null;
+  return src.includes('flutterwave')||src.includes('checkout')||src.includes('pay');
+ })||frames[0]||null;
 }
 
 function syncPaymentVisibility(){
