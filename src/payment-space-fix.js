@@ -1,5 +1,6 @@
 const STYLE_ID='litesms-payment-space-fix';
 const HIDDEN_CLASS='litesms-payment-collapsed';
+let paymentOpened=false;
 
 function ensureStyles(){
  if(document.getElementById(STYLE_ID))return;
@@ -22,34 +23,31 @@ function findPaymentIframe(){
  })||null;
 }
 
-function collapsePayment(){
+function syncPaymentVisibility(){
  const iframe=findPaymentIframe();
- if(iframe)iframe.classList.add(HIDDEN_CLASS);
-}
-
-function showPayment(){
- const iframe=findPaymentIframe();
- if(iframe)iframe.classList.remove(HIDDEN_CLASS);
+ if(!iframe)return;
+ iframe.classList.toggle(HIDDEN_CLASS,!paymentOpened);
 }
 
 function init(){
  ensureStyles();
- collapsePayment();
+ syncPaymentVisibility();
  document.addEventListener('click',event=>{
   const target=event.target?.closest?.('button,a,[role="button"]');
   if(target&&isAddFundsTarget(target)){
-   setTimeout(showPayment,0);
-   setTimeout(showPayment,100);
-   setTimeout(showPayment,300);
+   paymentOpened=true;
+   setTimeout(syncPaymentVisibility,0);
+   setTimeout(syncPaymentVisibility,100);
+   setTimeout(syncPaymentVisibility,300);
   }
  },true);
  window.addEventListener('message',event=>{
-  if(event.data?.type==='litesms-payment-result')setTimeout(collapsePayment,0);
+  if(event.data?.type==='litesms-payment-result'){
+   paymentOpened=false;
+   setTimeout(syncPaymentVisibility,0);
+  }
  });
- const observer=new MutationObserver(()=>{
-  const iframe=findPaymentIframe();
-  if(iframe&&!iframe.dataset.litesmsPaymentOpened)iframe.classList.add(HIDDEN_CLASS);
- });
+ const observer=new MutationObserver(syncPaymentVisibility);
  const root=document.getElementById('root');
  if(root)observer.observe(root,{childList:true,subtree:true});
 }
