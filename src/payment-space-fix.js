@@ -1,5 +1,6 @@
 const STYLE_ID='litesms-payment-space-fix';
 const HIDDEN_CLASS='litesms-payment-collapsed';
+const OPENED_ATTR='data-litesms-payment-opened';
 
 function ensureStyles(){
  if(document.getElementById(STYLE_ID))return;
@@ -35,13 +36,13 @@ function paymentContainer(iframe){
 function collapsePayment(){
  const iframe=findPaymentIframe();
  const container=paymentContainer(iframe);
- if(container)container.classList.add(HIDDEN_CLASS);
+ if(container){container.classList.add(HIDDEN_CLASS);container.removeAttribute(OPENED_ATTR)}
 }
 
 function showPayment(){
  const iframe=findPaymentIframe();
  const container=paymentContainer(iframe);
- if(container)container.classList.remove(HIDDEN_CLASS);
+ if(container){container.setAttribute(OPENED_ATTR,'true');container.classList.remove(HIDDEN_CLASS)}
 }
 
 function init(){
@@ -51,6 +52,7 @@ function init(){
   if(target&&isAddFundsTarget(target)){
    setTimeout(showPayment,0);
    setTimeout(showPayment,150);
+   setTimeout(showPayment,500);
   }
  },true);
  window.addEventListener('message',event=>{
@@ -60,7 +62,7 @@ function init(){
   const iframe=findPaymentIframe();
   if(iframe){
    const container=paymentContainer(iframe);
-   if(container&&!container.dataset.litesmsPaymentOpened)container.classList.add(HIDDEN_CLASS);
+   if(container&&!container.hasAttribute(OPENED_ATTR))container.classList.add(HIDDEN_CLASS);
   }
  });
  const root=document.getElementById('root');
