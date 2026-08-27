@@ -24,7 +24,6 @@ async function loadProfile(panel){
   const role=p.role==='admin'?'Administrator':'Customer';
   const rows=[['Full name',name],['Username',username],['Telegram ID',String(telegramId)],['Account type',role]];
   box.innerHTML='<h3>Account Information</h3>'+rows.map(([a,b])=>`<div class="profile-row"><span class="profile-label">${a}</span><span class="profile-value">${b}</span></div>`).join('');
-  const refresh=document.createElement('button');refresh.type='button';refresh.className='secondary';refresh.textContent='Refresh Account Information';refresh.onclick=()=>{box.remove();loadProfile(panel)};box.appendChild(refresh);
  }catch(e){box.innerHTML=`<h3>Account Information</h3><div class="muted">${e?.message||'Unable to load account information.'}</div>`}
 }
 
