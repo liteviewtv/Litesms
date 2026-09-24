@@ -19,15 +19,19 @@ const aliases = {
 const normalize = (value) => String(value || '').trim().toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '');
 const serviceKey = (text) => aliases[normalize(text)] || normalize(text);
 
-function addGenericServiceLogo(wrap) {
-  wrap.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="#16a34a"/>
-      <rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="#22c55e"/>
-      <rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="#22c55e"/>
-      <rect x="13.5" y="13.5" width="7" height="7" rx="2" fill="#16a34a"/>
-    </svg>`;
-  wrap.style.cssText += 'background:#dcfce7;';
+function addGenericServiceLogo(wrap, raw) {
+  const slug = normalize(raw);
+  wrap.style.cssText += 'background:#f4f7f9;';
+  if (!slug) return;
+  const img = document.createElement('img');
+  img.alt = '';
+  img.width = 22;
+  img.height = 22;
+  img.loading = 'lazy';
+  img.style.cssText = 'width:22px;height:22px;display:block;object-fit:contain;';
+  img.src = 'https://cdn.simpleicons.org/' + slug;
+  img.onerror = () => { wrap.innerHTML = ''; };
+  wrap.appendChild(img);
 }
 
 function addServiceLogo(button) {
@@ -42,7 +46,7 @@ function addServiceLogo(button) {
   wrap.style.cssText = 'width:24px;height:24px;min-width:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:9px;vertical-align:middle;border-radius:7px;overflow:hidden;background:#f4f7f9;';
 
   if (!entry) {
-    addGenericServiceLogo(wrap);
+    addGenericServiceLogo(wrap, raw);
     button.prepend(wrap);
     button.dataset.serviceLogoDecorated = 'true';
     return;
@@ -56,7 +60,7 @@ function addServiceLogo(button) {
   img.style.cssText = 'width:22px;height:22px;display:block;object-fit:contain;';
   img.src = `https://cdn.simpleicons.org/${entry[0]}/${entry[1]}`;
   img.onerror = () => {
-    addGenericServiceLogo(wrap);
+    addGenericServiceLogo(wrap, raw);
   };
   wrap.appendChild(img);
   button.prepend(wrap);
