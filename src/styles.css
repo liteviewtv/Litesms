@@ -788,3 +788,10 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 .wallet-panel>.wallet-fiat-amount + .primary{
   order:5!important;
 }
+
+.wallet-panel>.notice,
+.wallet-panel>[style*="border:1px solid #dbe7f0"]{
+  order:7!important;
+  width:100%!important;
+  display:block!important;
+}
