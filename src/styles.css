@@ -549,3 +549,81 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
     padding:9px 8px;
   }
 }
+
+/* Crypto deposit: amount and selectors aligned in two columns */
+.crypto-deposit-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+  margin-top:16px;
+}
+.crypto-deposit-layout > label{
+  min-width:0;
+  margin:0;
+}
+.crypto-deposit-layout .crypto-select-grid{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  min-width:0;
+  margin:0;
+}
+.crypto-deposit-layout .crypto-select-grid > label{
+  min-width:0;
+  margin:0;
+}
+.crypto-deposit-layout .crypto-choice-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  max-height:210px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  margin-top:8px;
+  padding-right:2px;
+}
+.crypto-deposit-layout .crypto-choice-list .choice-chip{
+  min-width:0;
+  min-height:48px;
+  padding:9px 7px;
+  text-align:center;
+  line-height:1.2;
+}
+.crypto-deposit-layout .crypto-network-list{
+  display:flex;
+  flex-wrap:nowrap;
+  gap:8px;
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  margin-top:8px;
+  padding:0 0 5px;
+}
+.crypto-deposit-layout .crypto-network-list .choice-chip{
+  flex:0 0 auto;
+  min-width:125px;
+  min-height:46px;
+  white-space:nowrap;
+}
+@media(max-width:560px){
+  .crypto-deposit-layout{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:12px;
+  }
+  .crypto-deposit-layout .crypto-choice-list{
+    gap:7px;
+    max-height:360px;
+  }
+  .crypto-deposit-layout .crypto-choice-list .choice-chip{
+    min-height:46px;
+    font-size:12px;
+    padding:8px 5px;
+  }
+  .crypto-deposit-layout .crypto-network-list .choice-chip{
+    min-width:105px;
+    font-size:12px;
+    padding:8px 7px;
+  }
+}
