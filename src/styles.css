@@ -723,3 +723,30 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   width:100%!important;
   margin-top:0!important;
 }
+
+
+/* Wallet layout: balance card and all deposit controls must remain in normal vertical flow. */
+.wallet-panel{
+  display:block!important;
+  grid-template-columns:none!important;
+  column-gap:initial!important;
+  row-gap:initial!important;
+  align-items:initial!important;
+}
+.wallet-panel>.balance{
+  display:block!important;
+  width:100%!important;
+  grid-column:auto!important;
+}
+.wallet-panel>.wallet-crypto-amount,
+.wallet-panel>.deposit-method-tabs,
+.wallet-panel>.wallet-crypto-grid,
+.wallet-panel>.primary,
+.wallet-panel>.notice{
+  display:block!important;
+  width:100%!important;
+  grid-column:auto!important;
+}
+.wallet-panel>.wallet-crypto-grid{
+  display:grid!important;
+}
