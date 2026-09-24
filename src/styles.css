@@ -864,3 +864,16 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   object-fit:contain!important;
   display:block!important;
 }
+
+.wallet-panel .wallet-network-list .choice-chip{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+.wallet-panel .crypto-network-icon{
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  object-fit:contain!important;
+  display:block!important;
+}
