@@ -752,14 +752,14 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 }
 
 
-/* Deposit method tabs: stack Bank/Card and Crypto vertically. */
+/* Deposit method tabs: keep Bank/Card and Crypto side-by-side. */
 .wallet-panel>.deposit-method-tabs{
   display:flex!important;
-  flex-direction:column!important;
+  flex-direction:row!important;
   width:100%!important;
   gap:8px!important;
 }
 .wallet-panel>.deposit-method-tabs>button{
-  width:100%!important;
-  flex:0 0 auto!important;
+  width:auto!important;
+  flex:1 1 0!important;
 }
