@@ -795,3 +795,15 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   width:100%!important;
   display:block!important;
 }
+
+/* Wallet children must never be visually reordered by legacy panel rules. */
+.wallet-panel>h2{order:0!important;}
+.wallet-panel>.balance{order:1!important;}
+.wallet-panel>.deposit-method-tabs{order:2!important;}
+.wallet-panel>.wallet-crypto-amount,
+.wallet-panel>.wallet-fiat-amount{order:3!important;}
+.wallet-panel>.wallet-crypto-grid{order:4!important;}
+.wallet-panel>.primary{order:5!important;}
+.wallet-panel>iframe{order:6!important;width:100%!important;}
+.wallet-panel>.notice,
+.wallet-panel>[style*="border:1px solid #dbe7f0"]{order:7!important;}
