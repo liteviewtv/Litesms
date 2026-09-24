@@ -877,3 +877,18 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   object-fit:contain!important;
   display:block!important;
 }
+
+/* Remove visual placeholder/fallback behind network logos */
+.wallet-panel .wallet-network-list .crypto-network-icon{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  border-radius:0!important;
+}
+.wallet-panel .wallet-network-list .choice-chip{
+  background:#fff!important;
+}
+.wallet-panel .wallet-network-list .choice-chip.selected{
+  background:linear-gradient(135deg,#eafaf1,#eff8ff)!important;
+}
