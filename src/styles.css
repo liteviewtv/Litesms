@@ -727,3 +727,21 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   width:100%!important;
   margin-top:0!important;
 }
+
+
+/* Wallet must keep the same vertical flow in Crypto mode as Bank/Card mode. */
+.wallet-panel{
+  display:block!important;
+  grid-template-columns:none!important;
+  column-gap:normal!important;
+  align-items:initial!important;
+}
+.wallet-panel .wallet-crypto-amount{
+  grid-column:auto!important;
+}
+.wallet-panel .wallet-crypto-grid{
+  grid-column:auto!important;
+}
+.wallet-panel .wallet-crypto-grid + .primary{
+  grid-column:auto!important;
+}
