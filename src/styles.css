@@ -672,11 +672,11 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 }
 
 
-/* FINAL wallet crypto layout: keep crypto controls in two columns and make option rows horizontally scrollable */
+/* Wallet crypto selectors use the same scroll behavior as Buy a Number choice lists. */
 .wallet-panel .wallet-crypto-grid{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-  gap:12px!important;
+  gap:10px!important;
   width:100%!important;
   align-items:start!important;
   margin:0 0 18px!important;
@@ -689,59 +689,36 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 }
 .wallet-panel .wallet-crypto-list,
 .wallet-panel .wallet-network-list{
-  display:flex!important;
-  flex-direction:row!important;
-  flex-wrap:nowrap!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
   gap:8px!important;
   width:100%!important;
   max-width:100%!important;
-  max-height:none!important;
-  height:auto!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  margin:8px 0 0!important;
-  padding:2px 2px 8px!important;
+  max-height:220px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  margin-top:9px!important;
+  padding:2px!important;
   box-sizing:border-box!important;
-  scrollbar-width:thin!important;
 }
 .wallet-panel .wallet-crypto-list .choice-chip,
 .wallet-panel .wallet-network-list .choice-chip{
-  flex:0 0 auto!important;
-  width:auto!important;
-  min-width:125px!important;
-  min-height:46px!important;
-  white-space:nowrap!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:45px!important;
+  white-space:normal!important;
   box-sizing:border-box!important;
-  text-align:center!important;
 }
-.wallet-panel .wallet-crypto-list .choice-chip{
-  min-width:130px!important;
+.wallet-panel .wallet-crypto-list::-webkit-scrollbar,
+.wallet-panel .wallet-network-list::-webkit-scrollbar{
+  width:5px!important;
 }
-.wallet-panel .wallet-network-list .choice-chip{
-  min-width:125px!important;
+.wallet-panel .wallet-crypto-list::-webkit-scrollbar-thumb,
+.wallet-panel .wallet-network-list::-webkit-scrollbar-thumb{
+  background:#c7dceb!important;
+  border-radius:99px!important;
 }
 .wallet-panel .wallet-crypto-grid + .primary{
   width:100%!important;
   margin-top:0!important;
-}
-
-
-/* Wallet must keep the same vertical flow in Crypto mode as Bank/Card mode. */
-.wallet-panel{
-  display:block!important;
-  grid-template-columns:none!important;
-  column-gap:normal!important;
-  align-items:initial!important;
-}
-.wallet-panel .wallet-crypto-amount{
-  grid-column:auto!important;
-}
-.wallet-panel .wallet-crypto-grid{
-  grid-column:auto!important;
-}
-.wallet-panel .wallet-crypto-grid + .primary{
-  grid-column:auto!important;
 }
