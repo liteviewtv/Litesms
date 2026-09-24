@@ -53,7 +53,7 @@ function addServiceLogo(button) {
   if (!raw || /no matching services|service unavailable/i.test(raw)) return;
 
   const key = serviceKey(raw);
-  if (POPULAR_SERVICES.has(key)) return;
+  // Popular services already have native buttons, but still ensure their original logos are present.
   const entry = SERVICE_LOGOS[key];
   const wrap = document.createElement('span');
   wrap.className = 'service-logo';
