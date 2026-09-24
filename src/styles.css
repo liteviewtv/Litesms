@@ -457,3 +457,53 @@ section.panel:has(>button.secondary)>button.secondary{width:100%;margin-top:18px
   .choice-chip{min-height:40px;padding:8px 9px;font-size:13px}
 }
 @media(min-width:700px){.bottom-nav{bottom:18px}}
+
+/* Wallet crypto selector layout */
+section.panel:has(.balance) .crypto-choice-list,
+section.panel:has(.balance) .crypto-network-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  max-height:none;
+  overflow:visible;
+  margin-top:9px;
+  padding:0;
+}
+section.panel:has(.balance) .crypto-choice-list .choice-chip,
+section.panel:has(.balance) .crypto-network-list .choice-chip{
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.2;
+  padding:10px 9px;
+}
+section.panel:has(.balance) label:has(.crypto-choice-list),
+section.panel:has(.balance) label:has(.crypto-network-list){
+  display:block;
+  width:100%;
+  margin-top:16px;
+}
+section.panel:has(.balance) label:has(.crypto-choice-list) + label:has(.crypto-network-list){
+  margin-top:18px;
+}
+section.panel:has(.balance) .crypto-choice-list + .crypto-network-list{
+  margin-top:9px;
+}
+section.panel:has(.balance) > button.primary{
+  margin-top:18px;
+}
+@media(max-width:420px){
+  section.panel:has(.balance) .crypto-choice-list,
+  section.panel:has(.balance) .crypto-network-list{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  section.panel:has(.balance) .crypto-choice-list .choice-chip,
+  section.panel:has(.balance) .crypto-network-list .choice-chip{
+    min-height:44px;
+    font-size:12.5px;
+    padding:9px 7px;
+  }
+}
