@@ -750,3 +750,16 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 .wallet-panel>.wallet-crypto-grid{
   display:grid!important;
 }
+
+
+/* Deposit method tabs: stack Bank/Card and Crypto vertically. */
+.wallet-panel>.deposit-method-tabs{
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  gap:8px!important;
+}
+.wallet-panel>.deposit-method-tabs>button{
+  width:100%!important;
+  flex:0 0 auto!important;
+}
