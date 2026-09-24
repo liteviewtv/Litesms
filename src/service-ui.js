@@ -19,9 +19,13 @@ const aliases = {
 const normalize = (value) => String(value || '').trim().toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '');
 const serviceKey = (text) => aliases[normalize(text)] || normalize(text);
 
+const POPULAR_SERVICES = new Set(['whatsapp','telegram','google','instagram','facebook','tiktok','discord','twitter','x']);
+const SERVICE_DOMAINS = {
+  aliexpress:'aliexpress.com', alibaba:'alibaba.com', apple:'apple.com', avito:'avito.ru', blablacar:'blablacar.com', booking:'booking.com', bolt:'bolt.eu', careem:'careem.com', cashapp:'cash.app', clubhouse:'clubhouse.com', coinbase:'coinbase.com', craigslist:'craigslist.org', deezer:'deezer.com', deliveroo:'deliveroo.com', doordash:'doordash.com', dropbox:'dropbox.com', ebay:'ebay.com', etsy:'etsy.com', eventbrite:'eventbrite.com', indeed:'indeed.com', kakaopay:'kakaopay.com', lazada:'lazada.com', lyft:'lyft.com', mercadolibre:'mercadolibre.com', netflix:'netflix.com', okcupid:'okcupid.com', pinterest:'pinterest.com', quora:'quora.com', roblox:'roblox.com', shopee:'shopee.com', slack:'slack.com', tinder:'tinder.com', uber:'uber.com', venmo:'venmo.com', walmart:'walmart.com', wise:'wise.com', yahoo:'yahoo.com', zalando:'zalando.com'
+};
 function addGenericServiceLogo(wrap, raw) {
   const slug = normalize(raw);
-  wrap.style.cssText += 'background:#f4f7f9;';
+  wrap.style.cssText += 'background:transparent;';
   if (!slug) return;
   const img = document.createElement('img');
   img.alt = '';
@@ -29,8 +33,17 @@ function addGenericServiceLogo(wrap, raw) {
   img.height = 22;
   img.loading = 'lazy';
   img.style.cssText = 'width:22px;height:22px;display:block;object-fit:contain;';
-  img.src = 'https://cdn.simpleicons.org/' + slug;
-  img.onerror = () => { wrap.innerHTML = ''; };
+  const domain = SERVICE_DOMAINS[slug] || (slug.length > 2 ? slug + '.com' : '');
+  let triedFavicon = false;
+  img.onerror = () => {
+    if (!triedFavicon) {
+      triedFavicon = true;
+      img.src = 'https://cdn.simpleicons.org/' + slug;
+      return;
+    }
+    wrap.remove();
+  };
+  img.src = domain ? 'https://icons.duckduckgo.com/ip3/' + domain + '.ico' : 'https://cdn.simpleicons.org/' + slug;
   wrap.appendChild(img);
 }
 
@@ -39,7 +52,9 @@ function addServiceLogo(button) {
   const raw = button.textContent.trim();
   if (!raw || /no matching services|service unavailable/i.test(raw)) return;
 
-  const entry = SERVICE_LOGOS[serviceKey(raw)];
+  const key = serviceKey(raw);
+  if (POPULAR_SERVICES.has(key)) return;
+  const entry = SERVICE_LOGOS[key];
   const wrap = document.createElement('span');
   wrap.className = 'service-logo';
   wrap.setAttribute('aria-hidden', 'true');
