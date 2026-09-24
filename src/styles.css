@@ -507,3 +507,45 @@ section.panel:has(.balance) > button.primary{
     padding:9px 7px;
   }
 }
+
+/* Crypto selectors: two-column desktop/mobile layout */
+section.panel:has(.balance) .crypto-select-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+  margin-top:8px;
+}
+section.panel:has(.balance) .crypto-select-grid > label{
+  min-width:0;
+  margin:0;
+}
+section.panel:has(.balance) .crypto-select-grid .crypto-choice-list{
+  grid-template-columns:1fr;
+  max-height:190px;
+  overflow-y:auto;
+}
+section.panel:has(.balance) .crypto-select-grid .crypto-network-list{
+  display:flex;
+  flex-wrap:nowrap;
+  gap:8px;
+  max-height:none;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chip{
+  flex:0 0 auto;
+  min-width:110px;
+  min-height:46px;
+  white-space:nowrap;
+}
+@media(max-width:420px){
+  section.panel:has(.balance) .crypto-select-grid{
+    gap:9px;
+  }
+  section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chip{
+    min-width:92px;
+    font-size:12px;
+    padding:9px 8px;
+  }
+}
