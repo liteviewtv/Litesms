@@ -763,3 +763,18 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   width:auto!important;
   flex:1 1 0!important;
 }
+
+
+/* Explicit Wallet vertical order: balance -> method tabs -> deposit amount -> crypto selectors. */
+.wallet-panel{
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+}
+.wallet-panel>h2{order:1!important;}
+.wallet-panel>.balance{order:2!important;}
+.wallet-panel>.deposit-method-tabs{order:3!important;}
+.wallet-panel>.wallet-crypto-amount{order:4!important;}
+.wallet-panel>.wallet-crypto-grid{order:5!important;}
+.wallet-panel>.primary{order:6!important;}
+.wallet-panel>.notice{order:7!important;}
