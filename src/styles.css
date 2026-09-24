@@ -689,25 +689,23 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 }
 .wallet-panel .wallet-crypto-list,
 .wallet-panel .wallet-network-list{
-  display:flex!important;
-  flex-wrap:nowrap!important;
-  flex-direction:row!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
   gap:8px!important;
   width:100%!important;
   max-width:100%!important;
-  max-height:none!important;
-  height:auto!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
+  height:150px!important;
+  max-height:150px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
   margin-top:9px!important;
-  padding:2px 2px 8px!important;
+  padding:2px!important;
   box-sizing:border-box!important;
 }
 .wallet-panel .wallet-crypto-list .choice-chip,
 .wallet-panel .wallet-network-list .choice-chip{
-  flex:0 0 auto!important;
-  width:auto!important;
-  min-width:125px!important;
+  width:100%!important;
+  min-width:0!important;
   min-height:45px!important;
   white-space:nowrap!important;
   box-sizing:border-box!important;
