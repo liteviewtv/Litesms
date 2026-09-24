@@ -653,3 +653,20 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 .wallet-panel .crypto-network-list .choice-chip{display:flex!important;flex:0 0 auto!important;width:auto!important;min-width:125px!important;min-height:46px!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;box-sizing:border-box!important}
 .wallet-panel .crypto-select-grid~.primary{width:100%!important}
 @media(max-width:520px){.wallet-panel .crypto-select-grid{grid-template-columns:1fr 1fr!important;gap:10px!important}.wallet-panel .crypto-choice-list{max-height:240px!important;grid-template-columns:1fr!important}.wallet-panel .crypto-network-list .choice-chip{min-width:105px!important;font-size:12px!important}}
+
+/* Isolated wallet crypto layout — intentionally overrides all legacy selector rules */
+.wallet-panel .wallet-crypto-amount{display:block!important;width:100%!important;margin:18px 0!important}
+.wallet-panel .deposit-method-tabs{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;width:100%!important;margin:0 0 20px!important}
+.wallet-panel .deposit-method-tabs>*{width:100%!important;margin:0!important}
+.wallet-panel .wallet-crypto-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:16px!important;align-items:start!important;width:100%!important;margin:0 0 18px!important}
+.wallet-panel .wallet-crypto-grid>label{display:block!important;width:100%!important;min-width:0!important;margin:0!important}
+.wallet-panel .wallet-crypto-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;width:100%!important;max-height:260px!important;overflow-y:auto!important;overflow-x:hidden!important;margin:8px 0 0!important;padding:2px 4px 4px 2px!important;box-sizing:border-box!important}
+.wallet-panel .wallet-crypto-list .choice-chip{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;min-height:46px!important;box-sizing:border-box!important;text-align:center!important;line-height:1.15!important}
+.wallet-panel .wallet-network-list{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:8px!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;margin:8px 0 0!important;padding:2px 2px 8px!important;box-sizing:border-box!important}
+.wallet-panel .wallet-network-list .choice-chip{flex:0 0 auto!important;width:auto!important;min-width:125px!important;min-height:46px!important;box-sizing:border-box!important;white-space:nowrap!important}
+.wallet-panel .wallet-crypto-grid + .primary{width:100%!important;margin-top:0!important}
+@media(max-width:520px){
+ .wallet-panel .wallet-crypto-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important}
+ .wallet-panel .wallet-crypto-list{grid-template-columns:1fr!important;max-height:280px!important}
+ .wallet-panel .wallet-network-list .choice-chip{min-width:105px!important;font-size:12px!important}
+}
