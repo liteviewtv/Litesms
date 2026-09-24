@@ -807,3 +807,47 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 .wallet-panel>iframe{order:6!important;width:100%!important;}
 .wallet-panel>.notice,
 .wallet-panel>[style*="border:1px solid #dbe7f0"]{order:7!important;}
+
+/* Final: Wallet uses normal document flow. Do not use flex/grid ordering here. */
+.wallet-panel{
+  display:block!important;
+  position:relative!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  grid-template-columns:none!important;
+}
+.wallet-panel>*{
+  position:static!important;
+  float:none!important;
+  clear:both!important;
+  transform:none!important;
+}
+.wallet-panel>.balance{
+  display:block!important;
+  width:100%!important;
+  margin-bottom:16px!important;
+}
+.wallet-panel>.deposit-method-tabs,
+.wallet-panel>.wallet-crypto-amount,
+.wallet-panel>.wallet-fiat-amount,
+.wallet-panel>.wallet-crypto-grid,
+.wallet-panel>.primary,
+.wallet-panel>iframe,
+.wallet-panel>.notice{
+  display:block!important;
+  width:100%!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  grid-column:auto!important;
+  order:initial!important;
+}
+.wallet-panel>.deposit-method-tabs{
+  display:flex!important;
+  flex-direction:row!important;
+  gap:8px!important;
+}
+.wallet-panel>.wallet-crypto-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+}
