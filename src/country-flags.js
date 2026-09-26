@@ -21,17 +21,8 @@ function applyCountryFlags() {
         button.dataset.countryId = key;
         button.dataset.countryDecorated = 'true';
       }
-      if (button.dataset.countryFlagApplied === '1') return;
-      const flag = FLAG_CODES[key] ? emoji(FLAG_CODES[key]) : '';
-      if (!flag) return;
-      button.dataset.countryFlagApplied = '1';
-      const flagNode = document.createElement('span');
-      flagNode.className = 'country-flag';
-      flagNode.textContent = flag;
-      flagNode.setAttribute('aria-hidden', 'true');
-      flagNode.style.marginRight = '8px';
-      flagNode.style.fontSize = '18px';
-      button.prepend(flagNode);
+      // Country buttons already render their single flag in src/main.jsx.
+      // Do not inject a second visual flag here.
     });
   });
 }
