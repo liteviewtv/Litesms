@@ -49,38 +49,9 @@ function addGenericServiceLogo(wrap, raw) {
 }
 
 function addServiceLogo(button) {
-  if (!button || button.dataset.serviceLogoDecorated === 'true') return;
-  const raw = button.textContent.trim();
-  if (!raw || /no matching services|service unavailable/i.test(raw)) return;
-
-  const key = serviceKey(raw);
-  // Popular services already have native buttons, but still ensure their original logos are present.
-  const entry = SERVICE_LOGOS[key];
-  const wrap = document.createElement('span');
-  wrap.className = 'service-logo';
-  wrap.setAttribute('aria-hidden', 'true');
-  wrap.style.cssText = 'width:24px;height:24px;min-width:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:9px;vertical-align:middle;border-radius:7px;overflow:hidden;background:#f4f7f9;';
-
-  if (!entry) {
-    addGenericServiceLogo(wrap, raw);
-    button.prepend(wrap);
-    button.dataset.serviceLogoDecorated = 'true';
-    return;
-  }
-
-  const img = document.createElement('img');
-  img.alt = '';
-  img.width = 22;
-  img.height = 22;
-  img.loading = 'lazy';
-  img.style.cssText = 'width:22px;height:22px;display:block;object-fit:contain;';
-  img.src = `https://cdn.simpleicons.org/${entry[0]}/${entry[1]}`;
-  img.onerror = () => {
-    addGenericServiceLogo(wrap, raw);
-  };
-  wrap.appendChild(img);
-  button.prepend(wrap);
-  button.dataset.serviceLogoDecorated = 'true';
+  // Service buttons already render their single logo in src/main.jsx.
+  // This enhancement must not inject a second visual logo.
+  return;
 }
 
 function decorateServices() {
