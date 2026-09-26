@@ -5,6 +5,24 @@ import './styles.css';
 import { renderAdminDashboard } from './admin-ui';
 const SmmPage = lazy(() => import('./smm-page'));
 const AccountsPage = lazy(() => import('./accounts-page'));
+const preloadSecondaryPages=()=>{SmmPage;AccountsPage;};
+let buyCatalogPrefetch=null;
+const normalizeCatalog=(v)=>{if(Array.isArray(v))return v;const x=v?.data??v;return Array.isArray(x)?x:Object.entries(x||{}).map(([id,name])=>({id,name}))};
+const prefetchBuyCatalog=()=>{
+ if(buyCatalogPrefetch)return buyCatalogPrefetch;
+ buyCatalogPrefetch=(async()=>{
+  if(!supabase)return null;
+  const c=await supabase.functions.invoke('fivesim-catalog',{body:{action:'countries'}});
+  if(c.error||c.data?.error)throw new Error('Provider unavailable');
+  const countries=normalizeCatalog(c.data?.data);
+  const first=countries.find(x=>String(x.id).toLowerCase()==='usa')||countries[0];
+  if(!first)return {countries,services:[]};
+  const s=await supabase.functions.invoke('fivesim-catalog',{body:{action:'services',country:String(first.id)}});
+  if(s.error||s.data?.error)throw new Error('Provider unavailable');
+  return {countries,services:normalizeCatalog(s.data?.data),country:String(first.id)};
+ })().catch(()=>null);
+ return buyCatalogPrefetch;
+};
 
 const expirationCancels=new Set();
 
@@ -19,10 +37,10 @@ function App(){
  useEffect(()=>{const onPopState=()=>{const path=window.location.pathname;setTab(path==='/smm'?'smm':path==='/accounts'?'accounts':path==='/wallet'?'wallet':'home')};window.addEventListener('popstate',onPopState);return()=>window.removeEventListener('popstate',onPopState)},[]);
  const loadData=async(id)=>{if(!id||!supabase)return;setTransactionLoading(true);setTransactionError('');const t=window.Telegram?.WebApp;try{if(t?.initData){const {data,error}=await supabase.functions.invoke('litesms-user-data',{body:{initData:t.initData}});if(error||data?.error)throw new Error(data?.error||error?.message||'Unable to load wallet activity');setWallet(data.wallet||null);setUsdNgnRate(Number(data.usd_ngn_rate)>0?Number(data.usd_ngn_rate):null);setOrders(data.orders||[]);setTransactions(Array.isArray(data.transactions)?data.transactions.slice(0,10):[]);return}setWallet(null);setOrders([]);setTransactions([]);throw new Error('Open Litesms inside Telegram.')}catch(e){setTransactionError(e.message||'Unable to load transaction history.');setTransactions([])}finally{setTransactionLoading(false)}};
  useEffect(()=>{ordersRef.current=orders},[orders]);
- useEffect(()=>{const t=window.Telegram?.WebApp;if(!t)return setAuthStatus('Open inside Telegram');t.ready();t.expand();if(!t.initData)return setAuthStatus('Open inside Telegram');if(!supabase)return setAuthStatus('Supabase configuration missing');(async()=>{try{const {data,error}=await supabase.functions.invoke('telegram-auth',{body:{initData:t.initData}});if(error||data?.error)return setAuthStatus('Authentication unavailable');setProfile(data.profile);setAuthStatus('Connected');await loadData(data.profile.id)}catch{setAuthStatus('Authentication unavailable')}})()},[]);
+ useEffect(()=>{const t=window.Telegram?.WebApp;if(!t)return setAuthStatus('Open inside Telegram');t.ready();t.expand();if(!t.initData)return setAuthStatus('Open inside Telegram');if(!supabase)return setAuthStatus('Supabase configuration missing');(async()=>{try{const {data,error}=await supabase.functions.invoke('telegram-auth',{body:{initData:t.initData}});if(error||data?.error)return setAuthStatus('Authentication unavailable');setProfile(data.profile);setAuthStatus('Connected');await loadData(data.profile.id);setTimeout(()=>{preloadSecondaryPages();prefetchBuyCatalog()},300)}catch{setAuthStatus('Authentication unavailable')}})()},[]);
  useEffect(()=>{if(!supabase||!profile||tab!=='wallet'||depositMethod!=='crypto')return;let cancelled=false;(async()=>{try{const t=window.Telegram?.WebApp;if(!t?.initData)return;const {data,error}=await supabase.functions.invoke('oxapay-deposit',{body:{initData:t.initData,action:'currencies'}});if(error||data?.error)throw new Error(data?.error||error?.message||'Unable to load cryptocurrencies');const raw=data?.currencies||{};const list=Object.entries(raw).map(([symbol,v])=>({symbol:String(v?.symbol||symbol).toUpperCase(),name:v?.name||symbol,status:v?.status!==false,networks:v?.networks||{}})).filter(x=>x.status);if(!cancelled){setCryptoCurrencies(list);const preferred=list.find(x=>x.symbol==='USDT')||list[0];if(preferred){setCryptoCurrency(preferred.symbol);const ns=Object.values(preferred.networks||{});setCryptoNetwork(ns[0]?.network||'')}}}catch{if(!cancelled)setCryptoCurrencies([])}})();return()=>{cancelled=true}},[profile,tab,depositMethod]);
  useEffect(()=>{if(!supabase)return setDbStatus('offline');supabase.from('providers').select('id').limit(1).then(({error})=>setDbStatus(error?'offline':'connected')).catch(()=>setDbStatus('offline'))},[]);
- useEffect(()=>{if(tab!=='buy')return;(async()=>{try{const c=await supabase.functions.invoke('fivesim-catalog',{body:{action:'countries'}});if(c.error||c.data?.error)throw new Error('Provider unavailable');const normalize=(v)=>{if(Array.isArray(v))return v;const x=v?.data??v;return Array.isArray(x)?x:Object.entries(x||{}).map(([id,name])=>({id,name}))};const list=normalize(c.data?.data);setCountries(list);const first=list.find(x=>String(x.id).toLowerCase()==='usa')||list[0];if(first)setCountry(String(first.id));setProviderStatus('connected')}catch{setProviderStatus('offline')}})()},[tab]);
+ useEffect(()=>{if(tab!=='buy')return;let cancelled=false;(async()=>{try{const prefetched=await prefetchBuyCatalog();if(cancelled)return;if(!prefetched)throw new Error('Provider unavailable');setCountries(prefetched.countries||[]);if(prefetched.country)setCountry(prefetched.country);if(prefetched.services?.length){setServices(prefetched.services);setService(String(prefetched.services[0]?.id||''))}setProviderStatus('connected')}catch{if(!cancelled)setProviderStatus('offline')}})();return()=>{cancelled=true}},[tab]);
  useEffect(()=>{if(providerStatus!=='connected'||!country)return;let cancelled=false;(async()=>{try{const {data,error}=await supabase.functions.invoke('fivesim-catalog',{body:{action:'services',country}});if(error||data?.error)throw new Error('Provider unavailable');const normalize=(v)=>{if(Array.isArray(v))return v;const x=v?.data??v;return Array.isArray(x)?x:Object.entries(x||{}).map(([id,name])=>({id,name}))};const list=normalize(data?.data);if(!cancelled){setServices(list);if(!list.some(x=>String(x.id)===String(service)))setService(String(list[0]?.id||''))}}catch{if(!cancelled)setServices([])}})();return()=>{cancelled=true}},[country,providerStatus]);
  useEffect(()=>{
   if(providerStatus!=='connected'||!countrySelected||!serviceSelected||!country||!service){
