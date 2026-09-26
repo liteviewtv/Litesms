@@ -5,7 +5,7 @@ import './styles.css';
 import { renderAdminDashboard } from './admin-ui';
 const SmmPage = lazy(() => import('./smm-page'));
 const AccountsPage = lazy(() => import('./accounts-page'));
-const preloadSecondaryPages=()=>{SmmPage;AccountsPage;};
+const preloadSecondaryPages=()=>{import('./smm-page');import('./accounts-page');};
 let buyCatalogPrefetch=null;
 const normalizeCatalog=(v)=>{if(Array.isArray(v))return v;const x=v?.data??v;return Array.isArray(x)?x:Object.entries(x||{}).map(([id,name])=>({id,name}))};
 const prefetchBuyCatalog=()=>{
