@@ -892,3 +892,15 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 .wallet-panel .wallet-network-list .choice-chip.selected{
   background:linear-gradient(135deg,#eafaf1,#eff8ff)!important;
 }
+
+/* Wallet network selector: show ONLY the network logo.
+   Prevent any leaked cryptocurrency/legacy icons from appearing before it. */
+.wallet-panel .wallet-network-list .choice-chip > img:not(.crypto-network-icon),
+.wallet-panel .wallet-network-list .choice-chip > .crypto-option-icon,
+.wallet-panel .wallet-network-list .choice-chip > .network-option-icon{
+  display:none!important;
+}
+.wallet-panel .wallet-network-list .choice-chip > .crypto-network-icon{
+  display:block!important;
+  flex:0 0 24px!important;
+}
