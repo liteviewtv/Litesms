@@ -250,6 +250,9 @@ button{cursor:pointer}
   transition:.15s ease;
 }
 .choice-chip:hover{border-color:#8bd4b0;background:#f1fbf5}
+/* Buy a Number: keep only the intended catalog icon when older/catalog markup supplies duplicates. */
+section.panel:has(.choice-list)>label:nth-of-type(1) .choice-chip>img+img{display:none!important}
+section.panel:has(.choice-list)>label:nth-of-type(2) .choice-chip>img:first-child{display:none!important}
 .choice-chip.selected{
   border-color:#18b957;
   background:linear-gradient(135deg,#eafaf1,#eff8ff);
