@@ -892,3 +892,12 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 .wallet-panel .wallet-network-list .choice-chip.selected{
   background:linear-gradient(135deg,#eafaf1,#eff8ff)!important;
 }
+
+/* Only the actual network logo may render inside a network chip. */
+.wallet-panel .wallet-network-list .choice-chip img:not(.crypto-network-icon){
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  min-width:0!important;
+  min-height:0!important;
+}
