@@ -904,3 +904,38 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   display:block!important;
   flex:0 0 24px!important;
 }
+
+
+/* Final network-logo isolation: remove every non-logo visual from network chips. */
+.wallet-panel .wallet-network-list .choice-chip{
+  position:relative!important;
+  background-image:none!important;
+  text-shadow:none!important;
+}
+.wallet-panel .wallet-network-list .choice-chip::before,
+.wallet-panel .wallet-network-list .choice-chip::after{
+  content:none!important;
+  display:none!important;
+  background:none!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.wallet-panel .wallet-network-list .choice-chip > *:not(.crypto-network-icon):not(span){
+  display:none!important;
+}
+.wallet-panel .wallet-network-list .choice-chip > .crypto-network-icon{
+  display:block!important;
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  min-height:24px!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  object-fit:contain!important;
+}
