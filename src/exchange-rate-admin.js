@@ -27,7 +27,7 @@ export function ensureExchangeRateCard(root) {
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
-      <strong>5SIM Funding</strong>
+      <strong>Investment</strong>
       <div class="muted" style="margin-top:4px">Provider funding summary shown in USD only.</div>
       <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
       <div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div>
