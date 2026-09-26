@@ -8,7 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>Litesms</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script defer src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/src/navigation.css?v=202608262000" />
   </head>
   <body>
@@ -27,8 +27,12 @@
           import('/src/provider-pricing-admin.js?v=202609061640')
         ]);
       };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(loadEnhancements, 0), { once: true });
-      else setTimeout(loadEnhancements, 0);
+      const runWhenIdle = () => {
+        if ('requestIdleCallback' in window) requestIdleCallback(loadEnhancements, { timeout: 2500 });
+        else setTimeout(loadEnhancements, 1000);
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', runWhenIdle, { once: true });
+      else runWhenIdle();
     </script>
   </body>
 </html>
