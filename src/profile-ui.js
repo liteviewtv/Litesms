@@ -21,7 +21,7 @@ async function loadProfile(panel){
   const name=[p.first_name,p.last_name].filter(Boolean).join(' ')||'—';
   const username=p.username?`@${String(p.username).replace(/^@/,'')}`:'—';
   const telegramId=p.telegram_user_id??p.telegram_id??'—';
-  const role=String(p.role||'').trim().toLowerCase()==='admin'?'Admin':'Customer';
+  const mainAdminButton=[...panel.querySelectorAll('button')].find(b=>b.textContent?.trim()==='Admin Panel'); const role=(String(p.role||'').trim().toLowerCase()==='admin'||!!mainAdminButton)?'Admin':'Customer';
   const rows=[['Full name',name],['Username',username],['Telegram ID',String(telegramId)],['Account type',role]];
   box.innerHTML='<h3>Account Information</h3>'+rows.map(([a,b])=>`<div class="profile-row"><span class="profile-label">${a}</span><span class="profile-value">${b}</span></div>`).join('');
  }catch(e){box.innerHTML=`<h3>Account Information</h3><div class="muted">${e?.message||'Unable to load account information.'}</div>`}
