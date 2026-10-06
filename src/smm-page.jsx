@@ -8,6 +8,30 @@ const platformLogo=(category,name)=>{const text=(String(category||'')+' '+String
 const cleanHtml=html=>{if(!html)return'';const doc=new DOMParser().parseFromString(String(html),'text/html');const allowed=new Set(['P','BR','STRONG','B','EM','I','UL','OL','LI','SPAN']);doc.body.querySelectorAll('*').forEach(el=>{if(!allowed.has(el.tagName)){while(el.firstChild)el.parentNode?.insertBefore(el.firstChild,el);el.remove();return}for(const a of [...el.attributes])el.removeAttribute(a.name)});return doc.body.innerHTML};
 const call=async(fn,body)=>{const r=await supabase.functions.invoke(fn,{body});if(r.error){let msg=r.error.message||'Edge Function request failed';try{const b=await r.error.context?.json();if(b?.error)msg=String(b.error)}catch{}return{data:r.data,error:{message:msg}}}return r};
 
+let smmCatalogPrefetch=null,smmOrdersPrefetch=null;
+const normalizeSmmServices=v=>{const list=Array.isArray(v)?v:[];return list.map(s=>({...s,_searchText:(String(s.name||'')+' '+String(s.category||'')+' '+String(s.description||'')).toLowerCase()}))};
+const preloadSmmCatalog=()=>{
+ if(smmCatalogPrefetch)return smmCatalogPrefetch;
+ const initData=window.Telegram?.WebApp?.initData;
+ if(!initData||!supabase)return Promise.reject(new Error('Open Litesms inside Telegram.'));
+ smmCatalogPrefetch=call('figipanel',{initData,action:'catalog'}).then(r=>{
+  if(r.error||r.data?.error)throw Error(r.data?.error||r.error?.message||'Unable to load services');
+  return normalizeSmmServices(r.data?.services||[]);
+ }).catch(e=>{smmCatalogPrefetch=null;throw e});
+ return smmCatalogPrefetch;
+};
+const preloadSmmOrders=()=>{
+ if(smmOrdersPrefetch)return smmOrdersPrefetch;
+ const initData=window.Telegram?.WebApp?.initData;
+ if(!initData||!supabase)return Promise.resolve([]);
+ smmOrdersPrefetch=call('figipanel',{initData,action:'orders'}).then(r=>{
+  if(r.error||r.data?.error)throw Error(r.data?.error||r.error?.message||'Unable to load orders');
+  return r.data?.orders||[];
+ }).catch(()=>{smmOrdersPrefetch=null;return []});
+ return smmOrdersPrefetch;
+};
+export const preloadSmmData=()=>Promise.all([preloadSmmCatalog(),preloadSmmOrders()]);
+
 const NETWORKS=[['All',''],['Instagram','instagram'],['TikTok','tiktok'],['Facebook','facebook'],['Telegram','telegram'],['YouTube','youtube'],['Twitter','twitter'],['LinkedIn','linkedin'],['Quora','quora'],['Spotify','spotify'],['Twitch','twitch'],['Discord','discord'],['Web Traffic',''],['VK','vk'],['Snapchat','snapchat'],['Reddit','reddit'],['Pinterest','pinterest'],['Google','google'],['SoundCloud','soundcloud'],['Tumblr','tumblr'],['Vimeo','vimeo'],['Others','']];
 const platformMatch=(category,name,network)=>{if(network==='All')return true;const s=String(category||'')+' '+String(name||'');if(network==='Others')return !NETWORKS.slice(1,-1).some(([n])=>s.toLowerCase().includes(n.toLowerCase()));return s.toLowerCase().includes(network.toLowerCase())};
 
@@ -17,8 +41,8 @@ export default function SmmPage(){
  const[services,setServices]=useState([]),[orders,setOrders]=useState([]),[network,setNetwork]=useState('All'),[category,setCategory]=useState('All'),[search,setSearch]=useState(''),[confirmed,setConfirmed]=useState(false),[selected,setSelected]=useState(null),[target,setTarget]=useState(''),[quantity,setQuantity]=useState(''),[loading,setLoading]=useState(true),[buying,setBuying]=useState(false),[message,setMessage]=useState(''),[tab,setTab]=useState('single'),[favoriteIds,setFavoriteIds]=useState(()=>{try{return JSON.parse(localStorage.getItem('litesms_smm_favorites')||'[]')}catch{return[]} });
  const deferredSearch=useDeferredValue(search);
 
- const load=async()=>{setLoading(true);setMessage('');try{const initData=window.Telegram?.WebApp?.initData;if(!initData)throw Error('Open Litesms inside Telegram.');const r=await call('figipanel',{initData,action:'catalog'});if(r.error||r.data?.error)throw Error(r.data?.error||r.error?.message||'Unable to load services');setServices((r.data?.services||[]).map(s=>({...s,_searchText:(String(s.name||'')+' '+String(s.category||'')+' '+String(s.description||'')).toLowerCase()})))}catch(e){setMessage(e.message||'Unable to load services.')}finally{setLoading(false)}};
- const loadOrders=async()=>{try{const initData=window.Telegram?.WebApp?.initData;if(!initData)return;const r=await call('figipanel',{initData,action:'orders'});if(!r.error&&!r.data?.error)setOrders(r.data?.orders||[])}catch{}};
+ const load=async()=>{setLoading(true);setMessage('');try{const list=await preloadSmmCatalog();setServices(list)}catch(e){setMessage(e.message||'Unable to load services.')}finally{setLoading(false)}};
+ const loadOrders=async()=>{try{setOrders(await preloadSmmOrders())}catch{}};
  useEffect(()=>{load()},[]);
  useEffect(()=>{if(tab==='orders')loadOrders()},[tab]);
  useEffect(()=>{try{localStorage.setItem('litesms_smm_favorites',JSON.stringify(favoriteIds))}catch{}},[favoriteIds]);
