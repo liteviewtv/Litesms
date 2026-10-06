@@ -843,8 +843,8 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
   order:initial!important;
 }
 .wallet-panel>.deposit-method-tabs{
-  display:flex!important;
-  flex-direction:row!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;
 }
 .wallet-panel>.wallet-crypto-grid{
