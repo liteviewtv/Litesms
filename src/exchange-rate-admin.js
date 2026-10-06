@@ -34,6 +34,14 @@ export function ensureExchangeRateCard(root) {
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
+      <strong>User Dashboard Visibility</strong>
+      <div class="muted" style="margin-top:4px">Choose which optional service buttons are visible on the user dashboard.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:10px 0"><span><b>SMM Service</b><br><span class="muted">Show the SMM button on the dashboard.</span></span><input type="checkbox" data-smm-enabled aria-label="Show SMM Service button" style="width:20px;height:20px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Accounts</b><br><span class="muted">Show the Accounts button on the dashboard.</span></span><input type="checkbox" data-accounts-enabled aria-label="Show Accounts button" style="width:20px;height:20px"></div>
+      <span class="muted" data-features-status></span>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
       <strong>Investment</strong>
       <div class="muted" style="margin-top:4px">Provider funding summary shown in USD only.</div>
       <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
@@ -51,6 +59,9 @@ export function ensureExchangeRateCard(root) {
   const cryptoFxInput = card.querySelector('[data-crypto-fx-input]');
   const cryptoFxSave = card.querySelector('[data-crypto-fx-save]');
   const cryptoFxStatus = card.querySelector('[data-crypto-fx-status]');
+  const smmEnabled = card.querySelector('[data-smm-enabled]');
+  const accountsEnabled = card.querySelector('[data-accounts-enabled]');
+  const featuresStatus = card.querySelector('[data-features-status]');
   const markupInput = card.querySelector('[data-markup-input]');
   const markupSave = card.querySelector('[data-markup-save]');
   const markupStatus = card.querySelector('[data-markup-status]');
@@ -75,6 +86,8 @@ export function ensureExchangeRateCard(root) {
       fxInput.value = data.rate;
       cryptoFxInput.value = data.crypto_deposit_rate;
       markupInput.value = Number.isFinite(Number(data.markup_percent)) ? data.markup_percent : 40;
+      smmEnabled.checked = data.smm_enabled !== false;
+      accountsEnabled.checked = data.accounts_enabled !== false;
       const balance = Number(provider.data?.balance);
       const lastDeposit = Number(provider.data?.last_deposit_usd);
       const totalInvested = Number(provider.data?.total_invested_usd);
@@ -154,6 +167,34 @@ export function ensureExchangeRateCard(root) {
       cryptoFxSave.disabled = false;
     }
   };
+
+  const saveFeature = async (key, enabled) => {
+    featuresStatus.textContent = 'Saving…';
+    featuresStatus.style.color = '';
+    smmEnabled.disabled = true;
+    accountsEnabled.disabled = true;
+    try {
+      const body = { initData: initData(), action: key };
+      if (key === 'save_smm_enabled') body.smm_enabled = enabled;
+      else body.accounts_enabled = enabled;
+      const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', { body });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to save dashboard visibility');
+      featuresStatus.textContent = 'Saved';
+      featuresStatus.style.color = '#166534';
+      setTimeout(() => { if (featuresStatus) featuresStatus.textContent = ''; }, 1800);
+    } catch (e) {
+      featuresStatus.textContent = e?.message || 'Unable to save dashboard visibility';
+      featuresStatus.style.color = '#b91c1c';
+      if (key === 'save_smm_enabled') smmEnabled.checked = !enabled;
+      else accountsEnabled.checked = !enabled;
+    } finally {
+      smmEnabled.disabled = false;
+      accountsEnabled.disabled = false;
+    }
+  };
+
+  smmEnabled.onchange = () => saveFeature('save_smm_enabled', smmEnabled.checked);
+  accountsEnabled.onchange = () => saveFeature('save_accounts_enabled', accountsEnabled.checked);
 
   markupSave.onclick = async () => {
     const markup = Number(markupInput.value);
