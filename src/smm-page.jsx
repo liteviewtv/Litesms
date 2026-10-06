@@ -24,7 +24,7 @@ export default function SmmPage(){
  useEffect(()=>{try{localStorage.setItem('litesms_smm_favorites',JSON.stringify(favoriteIds))}catch{}},[favoriteIds]);
 
  const networkServices=useMemo(()=>services.filter(s=>platformMatch(s.category,s.name,network)),[services,network]);
- const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return networkServices.filter(s=>(category==='All'||String(s.category||'')===category)&&(!q||s._searchText?.includes(q)))},[networkServices,category,deferredSearch]);
+ const filtered=useMemo(()=>{const q=deferredSearch.trim().toLowerCase();return networkServices.filter(s=>(category==='All'||String(s.category||'')===category)&&(!q||s._searchText?.includes(q)))},[networkServices,category,deferredSearch]);
  const categories=useMemo(()=>Array.from(new Set(networkServices.map(s=>s.category).filter(Boolean))),[networkServices]);
  const visibleServices=useMemo(()=>filtered.length>150?filtered.slice(0,150):filtered,[filtered]);
  const serviceById=useMemo(()=>new Map(services.map(s=>[String(s.id),s])),[services]);
@@ -47,7 +47,7 @@ export default function SmmPage(){
    {tab==='single'&&<div style={{padding:16}}>
     <h3 style={{margin:'0 0 14px',fontSize:19}}>🛒 Add new</h3>
     <label style={{display:'block',marginBottom:10}}>Search for...<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search for a service..." style={{marginTop:6}}/></label>
-    <label style={{display:'block',marginBottom:10}}>Category<select value={network} onChange={e=>setNetwork(e.target.value)} style={{marginTop:6}}><option value="All">All categories</option>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></label>
+    <label style={{display:'block',marginBottom:10}}>Category<select value={category} onChange={e=>setCategory(e.target.value)} style={{marginTop:6}}><option value="All">All categories</option>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></label>
     <label style={{display:'block',marginBottom:10}}>Order Service<select value={selected?.id||''} onChange={e=>chooseService(filtered.find(s=>String(s.id)===String(e.target.value)))} style={{marginTop:6}} disabled={loading}><option value="">{loading?'Loading services...':!filtered.length?'No services found':filtered.length>150?'Search to narrow services...':'Select a service...'}</option>{visibleServices.map(s=><option key={s.id} value={s.id}>{s.id} - {s.name} - [${Number(s.rate_usd||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:6})}]</option>)}</select></label>
     {selected&&<div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}><button className="secondary" onClick={()=>toggleFavorite(selected.id)} style={{width:'auto',padding:'7px 10px'}}>{favoriteIds.includes(selected.id)?'♥ Saved':'♡ Save service'}</button></div>}
     <label style={{display:'block',marginBottom:10}}>Link<input value={target} onChange={e=>setTarget(e.target.value)} placeholder="https://" style={{marginTop:6}}/></label>
