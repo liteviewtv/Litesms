@@ -14,9 +14,16 @@ export function ensureExchangeRateCard(root) {
     <div class="muted" style="margin-top:4px">These settings apply only to new 5SIM retail-price calculations. Existing orders keep their stored pricing.</div>
     <div style="margin-top:12px">
       <label style="display:block;font-weight:700">USD → NGN Exchange Rate</label>
-      <input class="input" type="number" min="0.01" step="0.01" inputmode="decimal" data-fx-input placeholder="Loading…" aria-label="USD to NGN exchange rate">
-      <button class="close" type="button" data-fx-save>Save Exchange Rate</button>
+      <input class="input" type="number" min="0.01" step="0.01" inputmode="decimal" data-fx-input placeholder="Loading…" aria-label="Platform USD to NGN exchange rate">
+      <button class="close" type="button" data-fx-save>Save Platform Rate</button>
       <span class="muted" data-fx-status style="margin-left:8px"></span>
+    </div>
+    <div style="margin-top:16px">
+      <label style="display:block;font-weight:700">Crypto Deposit USD → NGN Rate</label>
+      <div class="muted" style="margin-top:4px">Controls how much NGN a successful OxaPay crypto deposit credits to the user's wallet. This is separate from the platform pricing rate.</div>
+      <input class="input" type="number" min="0.01" step="0.01" inputmode="decimal" data-crypto-fx-input placeholder="Loading…" aria-label="Crypto deposit USD to NGN exchange rate">
+      <button class="close" type="button" data-crypto-fx-save>Save Crypto Deposit Rate</button>
+      <span class="muted" data-crypto-fx-status style="margin-left:8px"></span>
     </div>
     <div style="margin-top:16px">
       <label style="display:block;font-weight:700">Profit / Markup Percentage</label>
@@ -41,6 +48,9 @@ export function ensureExchangeRateCard(root) {
   const fxInput = card.querySelector('[data-fx-input]');
   const fxSave = card.querySelector('[data-fx-save]');
   const fxStatus = card.querySelector('[data-fx-status]');
+  const cryptoFxInput = card.querySelector('[data-crypto-fx-input]');
+  const cryptoFxSave = card.querySelector('[data-crypto-fx-save]');
+  const cryptoFxStatus = card.querySelector('[data-crypto-fx-status]');
   const markupInput = card.querySelector('[data-markup-input]');
   const markupSave = card.querySelector('[data-markup-save]');
   const markupStatus = card.querySelector('[data-markup-status]');
@@ -63,6 +73,7 @@ export function ensureExchangeRateCard(root) {
       if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to load pricing settings');
       if (provider.error || provider.data?.error) throw new Error(provider.data?.error || provider.error?.message || 'Unable to load 5SIM funding');
       fxInput.value = data.rate;
+      cryptoFxInput.value = data.crypto_deposit_rate;
       markupInput.value = Number.isFinite(Number(data.markup_percent)) ? data.markup_percent : 40;
       const balance = Number(provider.data?.balance);
       const lastDeposit = Number(provider.data?.last_deposit_usd);
@@ -71,6 +82,7 @@ export function ensureExchangeRateCard(root) {
       lastDepositEl.textContent = Number.isFinite(lastDeposit) ? `$${lastDeposit.toFixed(4)}` : '$0.00';
       totalInvestedEl.textContent = Number.isFinite(totalInvested) ? `$${totalInvested.toFixed(4)}` : '$0.00';
       fxStatus.textContent = '';
+      cryptoFxStatus.textContent = '';
       markupStatus.textContent = '';
       balanceStatus.textContent = 'Live funding data from 5SIM';
     } catch (e) {
@@ -80,6 +92,8 @@ export function ensureExchangeRateCard(root) {
       }
       fxStatus.textContent = e?.message || 'Unable to load settings';
       fxStatus.style.color = '#b91c1c';
+      cryptoFxStatus.textContent = e?.message || 'Unable to load settings';
+      cryptoFxStatus.style.color = '#b91c1c';
       markupStatus.textContent = e?.message || 'Unable to load settings';
       markupStatus.style.color = '#b91c1c';
       balanceStatus.textContent = e?.message || 'Unable to load 5SIM funding';
@@ -111,6 +125,33 @@ export function ensureExchangeRateCard(root) {
       fxStatus.style.color = '#b91c1c';
     } finally {
       fxSave.disabled = false;
+    }
+  };
+
+  cryptoFxSave.onclick = async () => {
+    const cryptoDepositRate = Number(cryptoFxInput.value);
+    if (!Number.isFinite(cryptoDepositRate) || cryptoDepositRate <= 0) {
+      cryptoFxStatus.textContent = 'Enter a valid rate.';
+      cryptoFxStatus.style.color = '#b91c1c';
+      return;
+    }
+    cryptoFxSave.disabled = true;
+    cryptoFxStatus.textContent = 'Saving…';
+    cryptoFxStatus.style.color = '';
+    try {
+      const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', {
+        body: { initData: initData(), action: 'save_crypto_deposit', crypto_deposit_rate: cryptoDepositRate }
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to save crypto deposit rate');
+      cryptoFxInput.value = data.crypto_deposit_rate ?? data.value_numeric;
+      cryptoFxStatus.textContent = 'Saved';
+      cryptoFxStatus.style.color = '#166534';
+      setTimeout(() => { if (cryptoFxStatus) cryptoFxStatus.textContent = ''; }, 1800);
+    } catch (e) {
+      cryptoFxStatus.textContent = e?.message || 'Unable to save crypto deposit rate';
+      cryptoFxStatus.style.color = '#b91c1c';
+    } finally {
+      cryptoFxSave.disabled = false;
     }
   };
 
