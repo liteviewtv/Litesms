@@ -40,15 +40,7 @@ export function ensureExchangeRateCard(root) {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Accounts</b><br><span class="muted">Show the Accounts button on the dashboard.</span></span><input type="checkbox" data-accounts-enabled aria-label="Show Accounts button" style="width:20px;height:20px"></div>
       <span class="muted" data-features-status></span>
     </div>
-
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0">
-      <strong>Investment</strong>
-      <div class="muted" style="margin-top:4px">Provider funding summary shown in USD only.</div>
-      <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
-      <div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div>
-      <div class="row"><span>Total Invested</span><b data-fivesim-total-invested>Checking…</b></div>
-      <div class="muted" data-fivesim-status style="margin-top:6px"></div>
-    </div>
+>
   `;
 
   settings.appendChild(card);
@@ -65,39 +57,20 @@ export function ensureExchangeRateCard(root) {
   const markupInput = card.querySelector('[data-markup-input]');
   const markupSave = card.querySelector('[data-markup-save]');
   const markupStatus = card.querySelector('[data-markup-status]');
-  const balanceEl = card.querySelector('[data-fivesim-balance]');
-  const lastDepositEl = card.querySelector('[data-fivesim-last-deposit]');
-  const totalInvestedEl = card.querySelector('[data-fivesim-total-invested]');
-  const balanceStatus = card.querySelector('[data-fivesim-status]');
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
   const load = async () => {
     try {
-      const [{ data, error }, provider] = await Promise.all([
-        supabase.functions.invoke('litesms-exchange-rate', {
-          body: { initData: initData(), action: 'get' }
-        }),
-        supabase.functions.invoke('litesms-admin', {
-          body: { initData: initData(), action: 'provider_balance' }
-        })
-      ]);
+      const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', { body: { initData: initData(), action: 'get' } });
       if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to load pricing settings');
-      if (provider.error || provider.data?.error) throw new Error(provider.data?.error || provider.error?.message || 'Unable to load 5SIM funding');
       fxInput.value = data.rate;
       cryptoFxInput.value = data.crypto_deposit_rate;
       markupInput.value = Number.isFinite(Number(data.markup_percent)) ? data.markup_percent : 40;
       smmEnabled.checked = data.smm_enabled !== false;
       accountsEnabled.checked = data.accounts_enabled !== false;
-      const balance = Number(provider.data?.balance);
-      const lastDeposit = Number(provider.data?.last_deposit_usd);
-      const totalInvested = Number(provider.data?.total_invested_usd);
-      balanceEl.textContent = Number.isFinite(balance) ? `$${balance.toFixed(4)}` : '—';
-      lastDepositEl.textContent = Number.isFinite(lastDeposit) ? `$${lastDeposit.toFixed(4)}` : '$0.00';
-      totalInvestedEl.textContent = Number.isFinite(totalInvested) ? `$${totalInvested.toFixed(4)}` : '$0.00';
       fxStatus.textContent = '';
       cryptoFxStatus.textContent = '';
       markupStatus.textContent = '';
-      balanceStatus.textContent = 'Live funding data from 5SIM';
     } catch (e) {
       if (e?.message === 'Admin access required') {
         card.remove();
@@ -109,33 +82,6 @@ export function ensureExchangeRateCard(root) {
       cryptoFxStatus.style.color = '#b91c1c';
       markupStatus.textContent = e?.message || 'Unable to load settings';
       markupStatus.style.color = '#b91c1c';
-      balanceStatus.textContent = e?.message || 'Unable to load 5SIM funding';
-      balanceStatus.style.color = '#b91c1c';
-    }
-  };
-
-  fxSave.onclick = async () => {
-    const rate = Number(fxInput.value);
-    if (!Number.isFinite(rate) || rate <= 0) {
-      fxStatus.textContent = 'Enter a valid rate.';
-      fxStatus.style.color = '#b91c1c';
-      return;
-    }
-    fxSave.disabled = true;
-    fxStatus.textContent = 'Saving…';
-    fxStatus.style.color = '';
-    try {
-      const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', {
-        body: { initData: initData(), action: 'save', rate }
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to save exchange rate');
-      fxInput.value = data.rate;
-      fxStatus.textContent = 'Saved';
-      fxStatus.style.color = '#166534';
-      setTimeout(() => { if (fxStatus) fxStatus.textContent = ''; }, 1800);
-    } catch (e) {
-      fxStatus.textContent = e?.message || 'Unable to save rate';
-      fxStatus.style.color = '#b91c1c';
     } finally {
       fxSave.disabled = false;
     }
@@ -223,5 +169,40 @@ export function ensureExchangeRateCard(root) {
     }
   };
 
+  load();
+}
+
+
+export function ensureProviderBalancesCard(root) {
+  const settings = root?.querySelector('#admin-balances-content');
+  const cardId = 'litesms-provider-balances-card';
+  if (!settings || settings.querySelector('#'+cardId)) return;
+  const card = document.createElement('section');
+  card.id = cardId;
+  card.className = 'card';
+  card.innerHTML = '<strong>Provider Balances</strong><div class="muted" style="margin-top:4px">Live provider funding information shown in USD.</div><div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div><div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div><div class="row"><span>Total Invested</span><b data-fivesim-total-invested>Checking…</b></div><div class="muted" data-fivesim-status style="margin-top:6px"></div>';
+  settings.appendChild(card);
+  const balanceEl = card.querySelector('[data-fivesim-balance]');
+  const lastDepositEl = card.querySelector('[data-fivesim-last-deposit]');
+  const totalInvestedEl = card.querySelector('[data-fivesim-total-invested]');
+  const balanceStatus = card.querySelector('[data-fivesim-status]');
+  const initData = () => window.Telegram?.WebApp?.initData || '';
+  const load = async () => {
+    try {
+      const provider = await supabase.functions.invoke('litesms-admin', { body: { initData: initData(), action: 'provider_balance' } });
+      if (provider.error || provider.data?.error) throw new Error(provider.data?.error || provider.error?.message || 'Unable to load provider balances');
+      const balance = Number(provider.data?.balance);
+      const lastDeposit = Number(provider.data?.last_deposit_usd);
+      const totalInvested = Number(provider.data?.total_invested_usd);
+      balanceEl.textContent = Number.isFinite(balance) ? '$' + balance.toFixed(4) : '—';
+      lastDepositEl.textContent = Number.isFinite(lastDeposit) ? '$' + lastDeposit.toFixed(4) : '$0.00';
+      totalInvestedEl.textContent = Number.isFinite(totalInvested) ? '$' + totalInvested.toFixed(4) : '$0.00';
+      balanceStatus.textContent = 'Live funding data from 5SIM';
+    } catch (e) {
+      if (e?.message === 'Admin access required') { card.remove(); return; }
+      balanceStatus.textContent = e?.message || 'Unable to load provider balances';
+      balanceStatus.style.color = '#b91c1c';
+    }
+  };
   load();
 }
