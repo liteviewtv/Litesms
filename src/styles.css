@@ -250,6 +250,9 @@ button{cursor:pointer}
   transition:.15s ease;
 }
 .choice-chip:hover{border-color:#8bd4b0;background:#f1fbf5}
+.service-choice-logo{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:8px;border:1px solid #dbe7f0;border-radius:8px;background:#fff;vertical-align:middle;flex:0 0 28px;box-sizing:border-box}
+.service-choice-logo img{width:20px;height:20px;object-fit:contain;display:block}
+
 .choice-chip.selected{
   border-color:#18b957;
   background:linear-gradient(135deg,#eafaf1,#eff8ff);
