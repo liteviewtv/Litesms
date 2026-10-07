@@ -115,6 +115,7 @@ export default function AccountsPage(){
        <div className="account-product-heading">
         <div className="account-category">{p.category||'Account'}</div>
         <h3>{p.name}</h3>
+        <div className={inStock?'account-stock-top':'account-stock-top out-stock'}>{Number(p.stock||0).toLocaleString('en-NG')} available</div>
        </div>
        <div className="account-price">{money(p.price_ngn)}<small>each</small></div>
       </div>
