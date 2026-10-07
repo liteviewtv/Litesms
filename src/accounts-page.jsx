@@ -7,6 +7,23 @@ const serviceLogo=(name)=>{const raw=String(name||'').trim().toLowerCase();const
 const serviceFallbackLogo=(name)=>{const raw=String(name||'').trim().toLowerCase();const domains={twitter:'x.com','twitter/x':'x.com','x/twitter':'x.com',bumble:'bumble.com',whatsapp:'whatsapp.com',telegram:'telegram.org',facebook:'facebook.com',instagram:'instagram.com',tiktok:'tiktok.com',snapchat:'snapchat.com',discord:'discord.com',tinder:'tinder.com',reddit:'reddit.com',linkedin:'linkedin.com',youtube:'youtube.com',google:'google.com',amazon:'amazon.com',microsoft:'microsoft.com',apple:'apple.com',uber:'uber.com',spotify:'spotify.com',netflix:'netflix.com'};const domain=domains[raw]||raw.replace(/[^a-z0-9]+/g,'')+'.com';return 'https://www.google.com/s2/favicons?domain='+encodeURIComponent(domain)+'&sz=64'};
 const accountLogo=(name,category)=>{const raw=[category,name].map(v=>String(v||'').trim().toLowerCase());const known=['whatsapp','telegram','google','instagram','facebook','tiktok','discord','twitter','twitter/x','x/twitter','bumble','snapchat','tinder','reddit','linkedin','youtube','amazon','microsoft','apple','uber','spotify','netflix'];const match=known.find(k=>raw.some(v=>v===k||v.includes(k)));return serviceLogo(match||category||name)};
 const accountLogoFallback=(name,category)=>{const raw=[category,name].map(v=>String(v||'').trim().toLowerCase());const known=['whatsapp','telegram','google','instagram','facebook','tiktok','discord','twitter','twitter/x','x/twitter','bumble','snapchat','tinder','reddit','linkedin','youtube','amazon','microsoft','apple','uber','spotify','netflix'];const match=known.find(k=>raw.some(v=>v===k||v.includes(k)));return serviceFallbackLogo(match||category||name)};
+let accountsPrefetch=null;
+const preloadAccountsData=()=>{
+ if(accountsPrefetch)return accountsPrefetch;
+ accountsPrefetch=(async()=>{
+  const initData=window.Telegram?.WebApp?.initData;
+  if(!initData||!supabase)return {products:[],orders:[]};
+  const[r,o]=await Promise.all([
+   call('bulkacc',{initData,action:'catalog'}),
+   call('bulkacc',{initData,action:'orders'})
+  ]);
+  if(r.error||r.data?.error)throw Error(r.data?.error||r.error?.message||'Unable to load accounts');
+  return {products:r.data?.products||[],orders:!o.error&&!o.data?.error?(o.data?.orders||[]):[]};
+ })().catch(e=>{accountsPrefetch=null;throw e});
+ return accountsPrefetch;
+};
+export { preloadAccountsData };
+
 const call=async(fn,body)=>{const r=await supabase.functions.invoke(fn,{body});if(r.error){let msg=r.error.message||'Edge Function request failed';try{const b=await r.error.context?.json();if(b?.error)msg=String(b.error)}catch{}return{data:r.data,error:{message:msg}}}return r};
 
 export default function AccountsPage(){
@@ -17,12 +34,9 @@ export default function AccountsPage(){
  const load=async()=>{
   setLoading(true);
   try{
-   const initData=window.Telegram?.WebApp?.initData;
-   if(!initData)throw Error('Open Litesms inside Telegram.');
-   const[r,o]=await Promise.all([call('bulkacc',{initData,action:'catalog'}),call('bulkacc',{initData,action:'orders'})]);
-   if(r.error||r.data?.error)throw Error(r.data?.error||r.error?.message||'Unable to load accounts');
-   setProducts(r.data?.products||[]);
-   if(!o.error&&!o.data?.error)setOrders(o.data?.orders||[]);
+   const prefetched=await preloadAccountsData();
+   setProducts(prefetched.products||[]);
+   setOrders(prefetched.orders||[]);
   }catch(e){setMessage(e.message||'Unable to load account products.')}
   finally{setLoading(false)}
  };
