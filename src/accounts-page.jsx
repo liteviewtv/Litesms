@@ -45,9 +45,11 @@ export default function AccountsPage(){
    return [p.name,p.category,p.description].some(v=>String(v||'').toLowerCase().includes(q));
   });
   return [...list].sort((a,b)=>{
-   if(sort==='price-low')return Number(a.price_ngn||0)-Number(b.price_ngn||0);
-   if(sort==='price-high')return Number(b.price_ngn||0)-Number(a.price_ngn||0);
-   if(sort==='stock')return Number(b.stock||0)-Number(a.stock||0);
+   const stockA=Number(a.stock||0),stockB=Number(b.stock||0);
+   if((stockA>0)!==(stockB>0))return stockA>0?-1:1;
+   if(sort==='price-low')return stockA-stockB||Number(a.price_ngn||0)-Number(b.price_ngn||0);
+   if(sort==='price-high')return stockA-stockB||Number(b.price_ngn||0)-Number(a.price_ngn||0);
+   if(sort==='stock')return stockB-stockA;
    return String(a.name||'').localeCompare(String(b.name||''));
   });
  },[products,category,search,sort]);
