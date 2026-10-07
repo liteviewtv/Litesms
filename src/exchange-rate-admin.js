@@ -180,28 +180,73 @@ export function ensureProviderBalancesCard(root) {
   const card = document.createElement('section');
   card.id = cardId;
   card.className = 'card';
-  card.innerHTML = '<strong>Provider Balances</strong><div class="muted" style="margin-top:4px">Live provider funding information shown in USD.</div><div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div><div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div><div class="row"><span>Total Invested</span><b data-fivesim-total-invested>Checking…</b></div><div class="muted" data-fivesim-status style="margin-top:6px"></div>';
+  card.innerHTML = `
+    <strong>Provider Balances</strong>
+    <div class="muted" style="margin-top:4px">Live provider balances shown in USD.</div>
+    <div style="margin-top:10px"><b>5SIM</b></div>
+    <div class="row"><span>Current Balance</span><b data-fivesim-balance>Checking…</b></div>
+    <div class="row"><span>Last Deposit</span><b data-fivesim-last-deposit>Checking…</b></div>
+    <div class="row"><span>Total Invested</span><b data-fivesim-total-invested>Checking…</b></div>
+    <div class="muted" data-fivesim-status style="margin-top:6px"></div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0"><b>FigiPanel</b></div>
+    <div class="row"><span>Current Balance</span><b data-figipanel-balance>Checking…</b></div>
+    <div class="muted" data-figipanel-status style="margin-top:6px"></div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0"><b>BulkAcc</b></div>
+    <div class="row"><span>Current Balance</span><b data-bulkacc-balance>Checking…</b></div>
+    <div class="muted" data-bulkacc-status style="margin-top:6px"></div>
+  `;
   settings.appendChild(card);
-  const balanceEl = card.querySelector('[data-fivesim-balance]');
+
+  const fiveBalanceEl = card.querySelector('[data-fivesim-balance]');
   const lastDepositEl = card.querySelector('[data-fivesim-last-deposit]');
   const totalInvestedEl = card.querySelector('[data-fivesim-total-invested]');
-  const balanceStatus = card.querySelector('[data-fivesim-status]');
+  const fiveStatus = card.querySelector('[data-fivesim-status]');
+  const figiBalanceEl = card.querySelector('[data-figipanel-balance]');
+  const figiStatus = card.querySelector('[data-figipanel-status]');
+  const bulkBalanceEl = card.querySelector('[data-bulkacc-balance]');
+  const bulkStatus = card.querySelector('[data-bulkacc-status]');
   const initData = () => window.Telegram?.WebApp?.initData || '';
+
+  const setProvider = (balanceEl, statusEl, result, label) => {
+    if (result?.ok) {
+      const balance = Number(result.balance);
+      balanceEl.textContent = Number.isFinite(balance) ? '$' + balance.toFixed(4) : '—';
+      statusEl.textContent = 'Live funding data from ' + label;
+      statusEl.style.color = '';
+    } else {
+      balanceEl.textContent = '—';
+      statusEl.textContent = result?.error || 'Unable to load provider balance';
+      statusEl.style.color = '#b91c1c';
+    }
+  };
+
   const load = async () => {
     try {
-      const provider = await supabase.functions.invoke('litesms-admin', { body: { initData: initData(), action: 'provider_balance' } });
+      const provider = await supabase.functions.invoke('litesms-admin', { body: { initData: initData(), action: 'provider_balances' } });
       if (provider.error || provider.data?.error) throw new Error(provider.data?.error || provider.error?.message || 'Unable to load provider balances');
-      const balance = Number(provider.data?.balance);
-      const lastDeposit = Number(provider.data?.last_deposit_usd);
-      const totalInvested = Number(provider.data?.total_invested_usd);
-      balanceEl.textContent = Number.isFinite(balance) ? '$' + balance.toFixed(4) : '—';
-      lastDepositEl.textContent = Number.isFinite(lastDeposit) ? '$' + lastDeposit.toFixed(4) : '$0.00';
-      totalInvestedEl.textContent = Number.isFinite(totalInvested) ? '$' + totalInvested.toFixed(4) : '$0.00';
-      balanceStatus.textContent = 'Live funding data from 5SIM';
+      const providers = provider.data?.providers || {};
+      setProvider(fiveBalanceEl, fiveStatus, providers['5sim'], '5SIM');
+      setProvider(figiBalanceEl, figiStatus, providers.figipanel, 'FigiPanel');
+      setProvider(bulkBalanceEl, bulkStatus, providers.bulkacc, 'BulkAcc');
+
+      const five = providers['5sim'];
+      if (five?.ok) {
+        const lastDeposit = Number(five.last_deposit_usd);
+        const totalInvested = Number(five.total_invested_usd);
+        lastDepositEl.textContent = Number.isFinite(lastDeposit) ? '$' + lastDeposit.toFixed(4) : '$0.00';
+        totalInvestedEl.textContent = Number.isFinite(totalInvested) ? '$' + totalInvested.toFixed(4) : '$0.00';
+      } else {
+        lastDepositEl.textContent = '—';
+        totalInvestedEl.textContent = '—';
+      }
     } catch (e) {
       if (e?.message === 'Admin access required') { card.remove(); return; }
-      balanceStatus.textContent = e?.message || 'Unable to load provider balances';
-      balanceStatus.style.color = '#b91c1c';
+      fiveStatus.textContent = e?.message || 'Unable to load provider balances';
+      fiveStatus.style.color = '#b91c1c';
+      figiStatus.textContent = e?.message || 'Unable to load provider balances';
+      figiStatus.style.color = '#b91c1c';
+      bulkStatus.textContent = e?.message || 'Unable to load provider balances';
+      bulkStatus.style.color = '#b91c1c';
     }
   };
   load();
