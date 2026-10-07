@@ -982,3 +982,5 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
  .account-product-heading h3{font-size:14px}
  .account-price{font-size:15px}
 }
+
+.account-stock-top{margin-top:4px;color:#087f43;font-size:10.5px;font-weight:800}.account-stock-top.out-stock{color:#be123c}
