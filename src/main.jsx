@@ -2,10 +2,28 @@ import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { supabase } from './lib/supabase';
 import './styles.css';
-import { renderAdminDashboard } from './admin-ui';
+import { preloadAdminData, renderAdminDashboard } from './admin-ui';
 const SmmPage = lazy(() => import('./smm-page'));
 const AccountsPage = lazy(() => import('./accounts-page'));
-const preloadSecondaryPages=()=>{import('./smm-page').then(m=>m.preloadSmmData?.()).catch(()=>{});import('./accounts-page');};
+let cryptoCurrenciesPrefetch=null;
+const preloadCryptoCurrencies=()=>{
+ if(cryptoCurrenciesPrefetch)return cryptoCurrenciesPrefetch;
+ cryptoCurrenciesPrefetch=(async()=>{
+  const t=window.Telegram?.WebApp;
+  if(!t?.initData||!supabase)return [];
+  const {data,error}=await supabase.functions.invoke('oxapay-deposit',{body:{initData:t.initData,action:'currencies'}});
+  if(error||data?.error)throw new Error(data?.error||error?.message||'Unable to load cryptocurrencies');
+  const raw=data?.currencies||{};
+  return Object.entries(raw).map(([symbol,v])=>({symbol:String(v?.symbol||symbol).toUpperCase(),name:v?.name||symbol,status:v?.status!==false,networks:v?.networks||{}})).filter(x=>x.status);
+ })().catch(e=>{cryptoCurrenciesPrefetch=null;throw e});
+ return cryptoCurrenciesPrefetch;
+};
+const preloadSecondaryPages=(isAdmin=false)=>{
+ import('./smm-page').then(m=>m.preloadSmmData?.()).catch(()=>{});
+ import('./accounts-page').then(m=>m.preloadAccountsData?.()).catch(()=>{});
+ preloadCryptoCurrencies().catch(()=>{});
+ if(isAdmin)preloadAdminData().catch(()=>{});
+};
 let buyCatalogPrefetch=null;
 const normalizeCatalog=(v)=>{if(Array.isArray(v))return v;const x=v?.data??v;return Array.isArray(x)?x:Object.entries(x||{}).map(([id,name])=>({id,name}))};
 const prefetchBuyCatalog=()=>{
@@ -38,9 +56,9 @@ function App(){
  useEffect(()=>{let cancelled=false;(async()=>{try{const {data,error}=await supabase.functions.invoke('litesms-exchange-rate',{body:{action:'get_features'}});if(error||data?.error)throw new Error(data?.error||error?.message||'Unable to load dashboard settings');if(cancelled)return;const next={smm_enabled:data.smm_enabled!==false,accounts_enabled:data.accounts_enabled!==false};setFeatureFlags(next);const path=window.location.pathname;if((path==='/smm'&&!next.smm_enabled)||(path==='/accounts'&&!next.accounts_enabled)){window.history.replaceState({page:'home'},'', '/');setTab('home')}}catch{}})();return()=>{cancelled=true}},[]);
  const loadData=async(id)=>{if(!id||!supabase)return;setTransactionLoading(true);setTransactionError('');const t=window.Telegram?.WebApp;try{if(t?.initData){const {data,error}=await supabase.functions.invoke('litesms-user-data',{body:{initData:t.initData}});if(error||data?.error)throw new Error(data?.error||error?.message||'Unable to load wallet activity');setWallet(data.wallet||null);setOrders(data.orders||[]);setTransactions(Array.isArray(data.transactions)?data.transactions.slice(0,10):[]);return}setWallet(null);setOrders([]);setTransactions([]);throw new Error('Open Litesms inside Telegram.')}catch(e){setTransactionError(e.message||'Unable to load transaction history.');setTransactions([])}finally{setTransactionLoading(false)}};
  useEffect(()=>{ordersRef.current=orders},[orders]);
- useEffect(()=>{const t=window.Telegram?.WebApp;if(!t)return setAuthStatus('Open inside Telegram');t.ready();t.expand();if(!t.initData)return setAuthStatus('Open inside Telegram');if(!supabase)return setAuthStatus('Supabase configuration missing');(async()=>{try{const {data,error}=await supabase.functions.invoke('telegram-auth',{body:{initData:t.initData}});if(error||data?.error)return setAuthStatus('Authentication unavailable');setProfile(data.profile);setAuthStatus('Connected');preloadSecondaryPages();prefetchBuyCatalog();await loadData(data.profile.id)}catch{setAuthStatus('Authentication unavailable')}})()},[]);
+ useEffect(()=>{const t=window.Telegram?.WebApp;if(!t)return setAuthStatus('Open inside Telegram');t.ready();t.expand();if(!t.initData)return setAuthStatus('Open inside Telegram');if(!supabase)return setAuthStatus('Supabase configuration missing');(async()=>{try{const {data,error}=await supabase.functions.invoke('telegram-auth',{body:{initData:t.initData}});if(error||data?.error)return setAuthStatus('Authentication unavailable');setProfile(data.profile);setAuthStatus('Connected');preloadSecondaryPages(data.profile?.role==='admin');prefetchBuyCatalog();await loadData(data.profile.id)}catch{setAuthStatus('Authentication unavailable')}})()},[]);
  useEffect(()=>{let cancelled=false;(async()=>{try{const r=await fetch('https://flagcdn.com/en/codes.json');if(!r.ok)throw new Error('flags');const data=await r.json();const normalize=v=>String(v||'').trim().toLowerCase().replace(/[’']/g,'').replace(/&/g,'and').replace(/[().,]/g,'').replace(/\s+/g,' ');const map={};Object.entries(data||{}).forEach(([iso,name])=>{map[normalize(name)]=String(iso).toLowerCase()});Object.assign(map,{usa:'us','united states':'us','united states of america':'us',uk:'gb','england':'gb','great britain':'gb'});if(!cancelled)setCountryCodes(map)}catch{} })();return()=>{cancelled=true}},[]);
- useEffect(()=>{if(!supabase||!profile||tab!=='wallet'||depositMethod!=='crypto')return;let cancelled=false;(async()=>{try{const t=window.Telegram?.WebApp;if(!t?.initData)return;const {data,error}=await supabase.functions.invoke('oxapay-deposit',{body:{initData:t.initData,action:'currencies'}});if(error||data?.error)throw new Error(data?.error||error?.message||'Unable to load cryptocurrencies');const raw=data?.currencies||{};const list=Object.entries(raw).map(([symbol,v])=>({symbol:String(v?.symbol||symbol).toUpperCase(),name:v?.name||symbol,status:v?.status!==false,networks:v?.networks||{}})).filter(x=>x.status);if(!cancelled){setCryptoCurrencies(list);const preferred=list.find(x=>x.symbol==='USDT')||list[0];if(preferred){setCryptoCurrency(preferred.symbol);const ns=Object.values(preferred.networks||{});setCryptoNetwork(ns[0]?.network||'')}}}catch{if(!cancelled)setCryptoCurrencies([])}})();return()=>{cancelled=true}},[profile,tab,depositMethod]);
+ useEffect(()=>{if(!supabase||!profile||tab!=='wallet'||depositMethod!=='crypto')return;let cancelled=false;(async()=>{try{const list=await preloadCryptoCurrencies();if(!cancelled){setCryptoCurrencies(list);const preferred=list.find(x=>x.symbol==='USDT')||list[0];if(preferred){setCryptoCurrency(preferred.symbol);const ns=Object.values(preferred.networks||{});setCryptoNetwork(ns[0]?.network||'')}}}catch{if(!cancelled)setCryptoCurrencies([])}})();return()=>{cancelled=true}},[profile,tab,depositMethod]);
  useEffect(()=>{if(!supabase)return setDbStatus('offline');supabase.from('providers').select('id').limit(1).then(({error})=>setDbStatus(error?'offline':'connected')).catch(()=>setDbStatus('offline'))},[]);
  useEffect(()=>{if(tab!=='buy')return;let cancelled=false;(async()=>{try{const prefetched=await prefetchBuyCatalog();if(cancelled)return;if(!prefetched)throw new Error('Provider unavailable');setCountries(prefetched.countries||[]);if(prefetched.country)setCountry(prefetched.country);if(prefetched.services?.length){setServices(prefetched.services);setService(String(prefetched.services[0]?.id||''))}setProviderStatus('connected')}catch{if(!cancelled)setProviderStatus('offline')}})();return()=>{cancelled=true}},[tab]);
  useEffect(()=>{if(providerStatus!=='connected'||!country)return;let cancelled=false;(async()=>{try{const {data,error}=await supabase.functions.invoke('fivesim-catalog',{body:{action:'services',country}});if(error||data?.error)throw new Error('Provider unavailable');const normalize=(v)=>{if(Array.isArray(v))return v;const x=v?.data??v;return Array.isArray(x)?x:Object.entries(x||{}).map(([id,name])=>({id,name}))};const list=normalize(data?.data);if(!cancelled){setServices(list);if(!list.some(x=>String(x.id)===String(service)))setService(String(list[0]?.id||''))}}catch{if(!cancelled)setServices([])}})();return()=>{cancelled=true}},[country,providerStatus]);
