@@ -13,7 +13,7 @@ const SMM_CATALOG_TTL=30000;
 const normalizeSmmServices=v=>{const list=Array.isArray(v)?v:[];return list.map(s=>({...s,_searchText:(String(s.name||'')+' '+String(s.category||'')+' '+String(s.description||'')).toLowerCase()}))};
 const preloadSmmCatalog=(force=false)=>{
  const fresh=smmCatalogPrefetch&&Date.now()-smmCatalogPrefetchAt<SMM_CATALOG_TTL;
- if(smmCatalogPrefetch&&(fresh||force===false))return smmCatalogPrefetch;
+ if(smmCatalogPrefetch&&(fresh||force===false||smmCatalogPrefetchAt===0))return smmCatalogPrefetch;
  const initData=window.Telegram?.WebApp?.initData;
  if(!initData||!supabase)return Promise.reject(new Error('Open Litesms inside Telegram.'));
  smmCatalogPrefetch=call('figipanel',{initData,action:'catalog'}).then(r=>{
