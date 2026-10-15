@@ -1033,3 +1033,17 @@ html[data-theme="dark"],html[data-theme="dark"] body{background:#0b1420;color:#e
 .app.dark-mode .account-category small,.app.dark-mode .account-category p{color:#c0cede}
 .app .account-category{color:#172536}
 .app .account-category small,.app .account-category p{color:#536579}
+
+
+/* Boost Accounts page: enforce readable text contrast in both themes */
+.app:not(.dark-mode) .panel{color:#172536}
+.app:not(.dark-mode) .panel h1,.app:not(.dark-mode) .panel h2,.app:not(.dark-mode) .panel h3,.app:not(.dark-mode) .panel p,.app:not(.dark-mode) .panel label,.app:not(.dark-mode) .panel small,.app:not(.dark-mode) .panel .muted,.app:not(.dark-mode) .panel .eyebrow,.app:not(.dark-mode) .panel .field-label{color:#40536a}
+.app:not(.dark-mode) .panel h1,.app:not(.dark-mode) .panel h2,.app:not(.dark-mode) .panel h3{color:#172536}
+.app:not(.dark-mode) .panel input::placeholder,.app:not(.dark-mode) .panel textarea::placeholder{color:#64748b;opacity:1}
+.app:not(.dark-mode) .panel input,.app:not(.dark-mode) .panel textarea,.app:not(.dark-mode) .panel select{color:#172536}
+.app:not(.dark-mode) .panel button.secondary{color:#172536}
+.app.dark-mode .panel,.app.dark-mode .panel h1,.app.dark-mode .panel h2,.app.dark-mode .panel h3,.app.dark-mode .panel p,.app.dark-mode .panel label,.app.dark-mode .panel small,.app.dark-mode .panel .muted,.app.dark-mode .panel .eyebrow,.app.dark-mode .panel .field-label{color:#e1eaf4}
+.app.dark-mode .panel h1,.app.dark-mode .panel h2,.app.dark-mode .panel h3{color:#f1f6fc}
+.app.dark-mode .panel input::placeholder,.app.dark-mode .panel textarea::placeholder{color:#a5b6c9;opacity:1}
+.app.dark-mode .panel input,.app.dark-mode .panel textarea,.app.dark-mode .panel select{color:#e1eaf4;background:#172536;border-color:#40566b}
+.app.dark-mode .panel button.secondary{color:#e1eaf4}
