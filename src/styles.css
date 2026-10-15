@@ -987,3 +987,31 @@ section.panel:has(.balance) .crypto-select-grid .crypto-network-list .choice-chi
 }
 
 .account-stock-top{margin-top:4px;color:#087f43;font-size:10.5px;font-weight:800}.account-stock-top.out-stock{color:#be123c}
+
+
+/* User-selectable dark mode */
+.theme-toggle{flex:0 0 auto;min-height:36px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:12px;font-weight:850;white-space:nowrap}
+.theme-toggle:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.app.dark-mode{--green-soft:#123d2b;--blue-soft:#142f4c;--navy:#e4eef9;--ink:#e1eaf4;--muted:#a5b6c9;--line:#2b4055;--surface:#172536;--bg:#0b1420;--shadow:0 12px 35px rgba(0,0,0,.28);--shadow-soft:0 5px 18px rgba(0,0,0,.22);background:linear-gradient(180deg,#111e2c 0%,#0b1420 100%);color:var(--ink);color-scheme:dark}
+html[data-theme="dark"],html[data-theme="dark"] body{background:#0b1420;color:#e1eaf4}
+.app.dark-mode .hero h1,.app.dark-mode .panel>h2,.app.dark-mode .order-number{color:var(--navy)}
+.app.dark-mode .cards article:nth-child(2),.app.dark-mode .secondary,.app.dark-mode .panel input,.app.dark-mode .panel select,.app.dark-mode .choice-chip,.app.dark-mode .operator-card,.app.dark-mode .order,.app.dark-mode .accounts-modal-card,.app.dark-mode .account-purchase-summary,.app.dark-mode .account-card,.app.dark-mode .empty,.app.dark-mode .notice,.app.dark-mode .operator-empty,.app.dark-mode .account-credential,.app.dark-mode .accounts-close{background:#172536!important;color:var(--ink)!important;border-color:#2b4055!important}
+.app.dark-mode .panel input,.app.dark-mode .panel select{color-scheme:dark}
+.app.dark-mode .choice-chip.selected,.app.dark-mode .operator-card.selected{background:#183b31!important;color:#8be0ad!important;border-color:#18b957!important}
+.app.dark-mode .choice-chip:hover,.app.dark-mode .operator-card:hover,.app.dark-mode .secondary:hover{background:#203449!important}
+.app.dark-mode .notice{background:#142538!important;color:#c0d1e2!important}
+.app.dark-mode .order-status,.app.dark-mode .order-meta small{background:#203247;color:#c4d4e5}
+.app.dark-mode .sms-waiting{background:#152d47;color:#a9d2ff}
+.app.dark-mode .sms-box{background:#123426;border-color:#235b41}
+.app.dark-mode .sms-box-info small,.app.dark-mode .code{color:#8be0ad!important}
+.app.dark-mode .account-purchase-summary strong,.app.dark-mode .accounts-modal-head h2,.app.dark-mode .account-product-heading h3,.app.dark-mode .account-price{color:var(--navy)!important}
+.app.dark-mode .telegram{background:#142f4c;border-color:#294a6c;color:#a9d2ff}
+.app.dark-mode .bottom-nav{background:rgba(17,30,44,.96);border-color:#2b4055}
+.app.dark-mode .bottom-nav button{color:#a5b6c9}
+.app.dark-mode .bottom-nav button.active{color:#70d99a}
+.app.dark-mode .panel label{color:#d5e2ef}
+.app.dark-mode .search-wrap span{color:#a5b6c9}
+.app.dark-mode .choice-list::-webkit-scrollbar-thumb{background:#40566b}
+.app.dark-mode .wallet-panel .wallet-network-list .choice-chip{background:#172536!important;color:var(--ink)!important;border-color:#2b4055!important}
+.app.dark-mode .wallet-panel .wallet-network-list .choice-chip.selected{background:#183b31!important}
+@media(prefers-reduced-motion:no-preference){.app,.theme-toggle{transition:background-color .18s ease,color .18s ease,border-color .18s ease}}
