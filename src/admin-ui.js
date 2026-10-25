@@ -18,6 +18,17 @@ html[data-theme="dark"] #litesms-admin-root .input::placeholder{color:#a5b6c9!im
 html[data-theme="dark"] #litesms-admin-root .tab{background:#203247;color:#e1eaf4;border-color:#40566b}
 html[data-theme="dark"] #litesms-admin-root .tab.on{background:#0f766e;color:#fff;border-color:#0f766e}
 html[data-theme="dark"] #litesms-admin-root .row,html[data-theme="dark"] #litesms-admin-root .analytics-item,html[data-theme="dark"] #litesms-admin-root .table th,html[data-theme="dark"] #litesms-admin-root .table td{border-color:#2b4055}
+
+/* Match the app's actual .app.dark-mode class; admin root is outside .app. */
+html:has(.app.dark-mode) #litesms-admin-root{background:#0b1420!important;color:#e1eaf4!important;color-scheme:dark}
+html:has(.app.dark-mode) #litesms-admin-root .card{background:#172536!important;color:#e1eaf4!important;border-color:#2b4055!important}
+html:has(.app.dark-mode) #litesms-admin-root h1,html:has(.app.dark-mode) #litesms-admin-root h2,html:has(.app.dark-mode) #litesms-admin-root strong,html:has(.app.dark-mode) #litesms-admin-root b,html:has(.app.dark-mode) #litesms-admin-root .row span,html:has(.app.dark-mode) #litesms-admin-root .analytics-item span,html:has(.app.dark-mode) #litesms-admin-root .table th{color:#e1eaf4!important}
+html:has(.app.dark-mode) #litesms-admin-root .muted,html:has(.app.dark-mode) #litesms-admin-root .card small{color:#b7c7d8!important}
+html:has(.app.dark-mode) #litesms-admin-root .input{background:#0f1c2a!important;color:#e1eaf4!important;border-color:#40566b!important}
+html:has(.app.dark-mode) #litesms-admin-root .input::placeholder{color:#a5b6c9!important;opacity:1}
+html:has(.app.dark-mode) #litesms-admin-root .tab{background:#203247!important;color:#e1eaf4!important;border-color:#40566b!important}
+html:has(.app.dark-mode) #litesms-admin-root .tab.on{background:#0f766e!important;color:#fff!important;border-color:#0f766e!important}
+html:has(.app.dark-mode) #litesms-admin-root .row,html:has(.app.dark-mode) #litesms-admin-root .analytics-item,html:has(.app.dark-mode) #litesms-admin-root .table th,html:has(.app.dark-mode) #litesms-admin-root .table td{border-color:#2b4055!important}
 `;
 function esc(v){return String(v??'').replace(/[&<>\\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;'}[c]||c))}function money(v){return`₦${Number(v||0).toLocaleString()}`}function statusBadge(v){const s=String(v||'').toLowerCase(),good=['completed','successful','active','received'].includes(s);return`<span class="badge ${good?'good':s==='failed'||s==='cancelled'?'bad':''}">${esc(v||'—')}</span>`}function mount(){let r=document.getElementById('litesms-admin-root');if(r)return r;const s=document.createElement('style');s.textContent=styles;document.head.appendChild(s);r=document.createElement('div');r.id='litesms-admin-root';r.innerHTML='<div class="wrap"></div>';document.body.appendChild(r);return r}
 let adminDashboardPrefetch=null;
