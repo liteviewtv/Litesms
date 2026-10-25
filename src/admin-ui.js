@@ -1,49 +1,32 @@
 import React,{useEffect,useRef,useState}from'react';import{supabase}from'./lib/supabase';import{ensureExchangeRateCard,ensureProviderBalancesCard}from'./exchange-rate-admin';
 const styles=`#litesms-admin-root{position:fixed;inset:0;z-index:9999;background:#f8fafc;color:#0f172a;display:none;overflow:auto;font-family:inherit}#litesms-admin-root .wrap{max-width:1100px;margin:auto;padding:18px 16px 40px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.head h1{margin:0;font-size:24px}.close{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:15px;padding:14px;margin-bottom:12px}.card small{color:#64748b}.num{display:block;font-size:22px;margin-top:5px}.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #e2e8f0}.row:first-child{border-top:0}.muted{color:#64748b;font-size:12px}.error{padding:12px;border-radius:10px;background:#fef2f2;color:#b91c1c}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.tab{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 12px;font-weight:700;white-space:nowrap}.tab.on{background:#0f766e;color:#fff;border-color:#0f766e}.table{overflow:auto}.table table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{text-align:left;padding:9px;border-bottom:1px solid #e2e8f0;white-space:nowrap}.input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:9px;margin:4px 0 8px;background:#fff}.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;align-items:center}.select{appearance:auto;min-height:40px}.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#e2e8f0;font-size:11px;font-weight:800}.bad{background:#fee2e2;color:#991b1b}.good{background:#dcfce7;color:#166534}.analytics-list{margin-top:8px}.analytics-item{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #e2e8f0}.analytics-item:first-child{border-top:0}.litesms-admin-open .bottom-nav{display:none!important}@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}.table table{font-size:12px}}
-/* Admin dashboard text contrast in light and dark themes. */
-#litesms-admin-root{background:#f8fafc!important;color:#0f172a!important;color-scheme:light}
-#litesms-admin-root .card{background:#fff!important;color:#172536!important}
-#litesms-admin-root h1,#litesms-admin-root strong,#litesms-admin-root b,#litesms-admin-root .row span,#litesms-admin-root .analytics-item span{color:#172536!important}
-#litesms-admin-root .muted,#litesms-admin-root .card small{color:#526579!important}
+
+/* Admin panel follows the selected Litesms theme. */
+#litesms-admin-root{background:#f4f7fb!important;color:#172536!important;color-scheme:light}
+#litesms-admin-root .card{background:#fff!important;color:#172536!important;border-color:#dce5ee!important}
+#litesms-admin-root h1,#litesms-admin-root strong,#litesms-admin-root b,#litesms-admin-root .row span,#litesms-admin-root .analytics-item span,#litesms-admin-root .table th,#litesms-admin-root .table td{color:#172536!important}
+#litesms-admin-root .muted,#litesms-admin-root small{color:#586b7e!important}
 #litesms-admin-root .input{background:#fff!important;color:#172536!important;border-color:#cbd5e1!important}
 #litesms-admin-root .input::placeholder{color:#64748b!important;opacity:1}
-#litesms-admin-root .tab{background:#fff;color:#172536;border-color:#cbd5e1}
-#litesms-admin-root .tab.on{background:#0f766e;color:#fff;border-color:#0f766e}
-html[data-theme="dark"] #litesms-admin-root{background:#0b1420!important;color:#e1eaf4!important;color-scheme:dark}
-html[data-theme="dark"] #litesms-admin-root .card{background:#172536!important;color:#e1eaf4!important;border-color:#2b4055!important}
-html[data-theme="dark"] #litesms-admin-root h1,html[data-theme="dark"] #litesms-admin-root strong,html[data-theme="dark"] #litesms-admin-root b,html[data-theme="dark"] #litesms-admin-root .row span,html[data-theme="dark"] #litesms-admin-root .analytics-item span{color:#e1eaf4!important}
-html[data-theme="dark"] #litesms-admin-root .muted,html[data-theme="dark"] #litesms-admin-root .card small{color:#b7c7d8!important}
-html[data-theme="dark"] #litesms-admin-root .input{background:#0f1c2a!important;color:#e1eaf4!important;border-color:#40566b!important}
-html[data-theme="dark"] #litesms-admin-root .input::placeholder{color:#a5b6c9!important}
-html[data-theme="dark"] #litesms-admin-root .tab{background:#203247;color:#e1eaf4;border-color:#40566b}
-html[data-theme="dark"] #litesms-admin-root .tab.on{background:#0f766e;color:#fff;border-color:#0f766e}
-html[data-theme="dark"] #litesms-admin-root .row,html[data-theme="dark"] #litesms-admin-root .analytics-item,html[data-theme="dark"] #litesms-admin-root .table th,html[data-theme="dark"] #litesms-admin-root .table td{border-color:#2b4055}
-
-/* Match the app's actual .app.dark-mode class; admin root is outside .app. */
+#litesms-admin-root .tab{background:#fff!important;color:#172536!important;border-color:#cbd5e1!important}
+#litesms-admin-root .tab.on{background:#0f766e!important;color:#fff!important;border-color:#0f766e!important}
+#litesms-admin-root .row,#litesms-admin-root .analytics-item,#litesms-admin-root .table th,#litesms-admin-root .table td{border-color:#e2e8f0!important}
+#litesms-admin-root .badge.good{background:#dcfce7!important;color:#166534!important}
+#litesms-admin-root .badge.bad{background:#fee2e2!important;color:#991b1b!important}
+#litesms-admin-root .error{background:#fef2f2!important;color:#b91c1c!important}
+/* Dark mode: dark surfaces with light text, not white cards. */
 html:has(.app.dark-mode) #litesms-admin-root{background:#0b1420!important;color:#e1eaf4!important;color-scheme:dark}
 html:has(.app.dark-mode) #litesms-admin-root .card{background:#172536!important;color:#e1eaf4!important;border-color:#2b4055!important}
-html:has(.app.dark-mode) #litesms-admin-root h1,html:has(.app.dark-mode) #litesms-admin-root h2,html:has(.app.dark-mode) #litesms-admin-root strong,html:has(.app.dark-mode) #litesms-admin-root b,html:has(.app.dark-mode) #litesms-admin-root .row span,html:has(.app.dark-mode) #litesms-admin-root .analytics-item span,html:has(.app.dark-mode) #litesms-admin-root .table th{color:#e1eaf4!important}
-html:has(.app.dark-mode) #litesms-admin-root .muted,html:has(.app.dark-mode) #litesms-admin-root .card small{color:#b7c7d8!important}
+html:has(.app.dark-mode) #litesms-admin-root h1,html:has(.app.dark-mode) #litesms-admin-root strong,html:has(.app.dark-mode) #litesms-admin-root b,html:has(.app.dark-mode) #litesms-admin-root .row span,html:has(.app.dark-mode) #litesms-admin-root .analytics-item span,html:has(.app.dark-mode) #litesms-admin-root .table th,html:has(.app.dark-mode) #litesms-admin-root .table td{color:#e1eaf4!important}
+html:has(.app.dark-mode) #litesms-admin-root .muted,html:has(.app.dark-mode) #litesms-admin-root small{color:#b7c7d8!important}
 html:has(.app.dark-mode) #litesms-admin-root .input{background:#0f1c2a!important;color:#e1eaf4!important;border-color:#40566b!important}
 html:has(.app.dark-mode) #litesms-admin-root .input::placeholder{color:#a5b6c9!important;opacity:1}
 html:has(.app.dark-mode) #litesms-admin-root .tab{background:#203247!important;color:#e1eaf4!important;border-color:#40566b!important}
 html:has(.app.dark-mode) #litesms-admin-root .tab.on{background:#0f766e!important;color:#fff!important;border-color:#0f766e!important}
 html:has(.app.dark-mode) #litesms-admin-root .row,html:has(.app.dark-mode) #litesms-admin-root .analytics-item,html:has(.app.dark-mode) #litesms-admin-root .table th,html:has(.app.dark-mode) #litesms-admin-root .table td{border-color:#2b4055!important}
-
-/* Final high-specificity contrast reset for all admin descendants, regardless of app theme. */
-#litesms-admin-root,#litesms-admin-root *{opacity:1!important;text-shadow:none!important}
-#litesms-admin-root{background:#0b1420!important;color:#e1eaf4!important;color-scheme:dark}
-#litesms-admin-root .card{background:#172536!important;color:#e1eaf4!important;border-color:#34495e!important}
-#litesms-admin-root .card *,#litesms-admin-root .head *,#litesms-admin-root .table th,#litesms-admin-root .table td{color:#e1eaf4!important}
-#litesms-admin-root .muted,#litesms-admin-root small,#litesms-admin-root .card small{color:#c0cede!important}
-#litesms-admin-root input,#litesms-admin-root textarea,#litesms-admin-root select{background:#0f1c2a!important;color:#f1f6fc!important;border:1px solid #52677c!important}
-#litesms-admin-root input::placeholder,#litesms-admin-root textarea::placeholder{color:#b7c7d8!important;opacity:1!important}
-#litesms-admin-root button{color:#f1f6fc!important;background:#203247!important;border-color:#52677c!important}
-#litesms-admin-root button.tab.on{background:#0f766e!important;color:#fff!important;border-color:#0f766e!important}
-#litesms-admin-root .badge.good{background:#14532d!important;color:#dcfce7!important}
-#litesms-admin-root .badge.bad{background:#7f1d1d!important;color:#fee2e2!important}
-#litesms-admin-root .error,#litesms-admin-root .error *{background:#451a1a!important;color:#fecaca!important}
-#litesms-admin-root .row,#litesms-admin-root .analytics-item,#litesms-admin-root .table th,#litesms-admin-root .table td{border-color:#34495e!important}
+html:has(.app.dark-mode) #litesms-admin-root .badge.good{background:#14532d!important;color:#dcfce7!important}
+html:has(.app.dark-mode) #litesms-admin-root .badge.bad{background:#7f1d1d!important;color:#fee2e2!important}
+html:has(.app.dark-mode) #litesms-admin-root .error{background:#451a1a!important;color:#fecaca!important}
 `;
 function esc(v){return String(v??'').replace(/[&<>\\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;'}[c]||c))}function money(v){return`₦${Number(v||0).toLocaleString()}`}function statusBadge(v){const s=String(v||'').toLowerCase(),good=['completed','successful','active','received'].includes(s);return`<span class="badge ${good?'good':s==='failed'||s==='cancelled'?'bad':''}">${esc(v||'—')}</span>`}function mount(){let r=document.getElementById('litesms-admin-root');if(r)return r;const s=document.createElement('style');s.textContent=styles;document.head.appendChild(s);r=document.createElement('div');r.id='litesms-admin-root';r.innerHTML='<div class="wrap"></div>';document.body.appendChild(r);return r}
 let adminDashboardPrefetch=null;
