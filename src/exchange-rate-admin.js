@@ -37,7 +37,8 @@ export function ensureExchangeRateCard(root) {
       <strong>User Dashboard Visibility</strong>
       <div class="muted" style="margin-top:4px">Choose which optional service buttons are visible on the user dashboard.</div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:10px 0"><span><b>SMM Service</b><br><span class="muted">Show the SMM button on the dashboard.</span></span><input type="checkbox" data-smm-enabled aria-label="Show SMM Service button" style="width:20px;height:20px"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Accounts</b><br><span class="muted">Show the Accounts button on the dashboard.</span></span><input type="checkbox" data-accounts-enabled aria-label="Show Accounts button" style="width:20px;height:20px"></div>\n      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Nextdoor Account</b><br><span class="muted">Show or hide the Buy Nextdoor Account button.</span></span><input type="checkbox" data-nextdoor-enabled aria-label="Show Nextdoor Account button" style="width:20px;height:20px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Accounts</b><br><span class="muted">Show the Accounts button on the dashboard.</span></span><input type="checkbox" data-accounts-enabled aria-label="Show Accounts button" style="width:20px;height:20px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Nextdoor Account</b><br><span class="muted">Show or hide the Buy Nextdoor Account button.</span></span><input type="checkbox" data-nextdoor-enabled aria-label="Show Nextdoor Account button" style="width:20px;height:20px"></div>
       <span class="muted" data-features-status></span>
     </div>
   `;
@@ -51,7 +52,8 @@ export function ensureExchangeRateCard(root) {
   const cryptoFxSave = card.querySelector('[data-crypto-fx-save]');
   const cryptoFxStatus = card.querySelector('[data-crypto-fx-status]');
   const smmEnabled = card.querySelector('[data-smm-enabled]');
-  const accountsEnabled = card.querySelector('[data-accounts-enabled]');\n  const nextdoorEnabled = card.querySelector('[data-nextdoor-enabled]');
+  const accountsEnabled = card.querySelector('[data-accounts-enabled]');
+  const nextdoorEnabled = card.querySelector('[data-nextdoor-enabled]');
   const featuresStatus = card.querySelector('[data-features-status]');
   const markupInput = card.querySelector('[data-markup-input]');
   const markupSave = card.querySelector('[data-markup-save]');
@@ -66,7 +68,8 @@ export function ensureExchangeRateCard(root) {
       cryptoFxInput.value = data.crypto_deposit_rate;
       markupInput.value = Number.isFinite(Number(data.markup_percent)) ? data.markup_percent : 40;
       smmEnabled.checked = data.smm_enabled !== false;
-      accountsEnabled.checked = data.accounts_enabled !== false;\n      nextdoorEnabled.checked = data.nextdoor_enabled !== false;
+      accountsEnabled.checked = data.accounts_enabled !== false;
+      nextdoorEnabled.checked = data.nextdoor_enabled !== false;
       fxStatus.textContent = '';
       cryptoFxStatus.textContent = '';
       markupStatus.textContent = '';
@@ -143,7 +146,8 @@ export function ensureExchangeRateCard(root) {
   };
 
   smmEnabled.onchange = () => saveFeature('save_smm_enabled', smmEnabled.checked);
-  accountsEnabled.onchange = () => saveFeature('save_accounts_enabled', accountsEnabled.checked);\n  nextdoorEnabled.onchange = () => saveFeature('save_nextdoor_enabled', nextdoorEnabled.checked);
+  accountsEnabled.onchange = () => saveFeature('save_accounts_enabled', accountsEnabled.checked);
+  nextdoorEnabled.onchange = () => saveFeature('save_nextdoor_enabled', nextdoorEnabled.checked);
 
   markupSave.onclick = async () => {
     const markup = Number(markupInput.value);
