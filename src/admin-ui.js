@@ -29,6 +29,21 @@ html:has(.app.dark-mode) #litesms-admin-root .input::placeholder{color:#a5b6c9!i
 html:has(.app.dark-mode) #litesms-admin-root .tab{background:#203247!important;color:#e1eaf4!important;border-color:#40566b!important}
 html:has(.app.dark-mode) #litesms-admin-root .tab.on{background:#0f766e!important;color:#fff!important;border-color:#0f766e!important}
 html:has(.app.dark-mode) #litesms-admin-root .row,html:has(.app.dark-mode) #litesms-admin-root .analytics-item,html:has(.app.dark-mode) #litesms-admin-root .table th,html:has(.app.dark-mode) #litesms-admin-root .table td{border-color:#2b4055!important}
+
+/* Final high-specificity contrast reset for all admin descendants, regardless of app theme. */
+#litesms-admin-root,#litesms-admin-root *{opacity:1!important;text-shadow:none!important}
+#litesms-admin-root{background:#0b1420!important;color:#e1eaf4!important;color-scheme:dark}
+#litesms-admin-root .card{background:#172536!important;color:#e1eaf4!important;border-color:#34495e!important}
+#litesms-admin-root .card *,#litesms-admin-root .head *,#litesms-admin-root .table th,#litesms-admin-root .table td{color:#e1eaf4!important}
+#litesms-admin-root .muted,#litesms-admin-root small,#litesms-admin-root .card small{color:#c0cede!important}
+#litesms-admin-root input,#litesms-admin-root textarea,#litesms-admin-root select{background:#0f1c2a!important;color:#f1f6fc!important;border:1px solid #52677c!important}
+#litesms-admin-root input::placeholder,#litesms-admin-root textarea::placeholder{color:#b7c7d8!important;opacity:1!important}
+#litesms-admin-root button{color:#f1f6fc!important;background:#203247!important;border-color:#52677c!important}
+#litesms-admin-root button.tab.on{background:#0f766e!important;color:#fff!important;border-color:#0f766e!important}
+#litesms-admin-root .badge.good{background:#14532d!important;color:#dcfce7!important}
+#litesms-admin-root .badge.bad{background:#7f1d1d!important;color:#fee2e2!important}
+#litesms-admin-root .error,#litesms-admin-root .error *{background:#451a1a!important;color:#fecaca!important}
+#litesms-admin-root .row,#litesms-admin-root .analytics-item,#litesms-admin-root .table th,#litesms-admin-root .table td{border-color:#34495e!important}
 `;
 function esc(v){return String(v??'').replace(/[&<>\\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;'}[c]||c))}function money(v){return`₦${Number(v||0).toLocaleString()}`}function statusBadge(v){const s=String(v||'').toLowerCase(),good=['completed','successful','active','received'].includes(s);return`<span class="badge ${good?'good':s==='failed'||s==='cancelled'?'bad':''}">${esc(v||'—')}</span>`}function mount(){let r=document.getElementById('litesms-admin-root');if(r)return r;const s=document.createElement('style');s.textContent=styles;document.head.appendChild(s);r=document.createElement('div');r.id='litesms-admin-root';r.innerHTML='<div class="wrap"></div>';document.body.appendChild(r);return r}
 let adminDashboardPrefetch=null;
