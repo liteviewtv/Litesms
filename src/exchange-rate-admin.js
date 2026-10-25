@@ -40,7 +40,6 @@ export function ensureExchangeRateCard(root) {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Accounts</b><br><span class="muted">Show the Accounts button on the dashboard.</span></span><input type="checkbox" data-accounts-enabled aria-label="Show Accounts button" style="width:20px;height:20px"></div>\n      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0"><span><b>Nextdoor Account</b><br><span class="muted">Show or hide the Buy Nextdoor Account button.</span></span><input type="checkbox" data-nextdoor-enabled aria-label="Show Nextdoor Account button" style="width:20px;height:20px"></div>
       <span class="muted" data-features-status></span>
     </div>
->
   `;
 
   settings.appendChild(card);
@@ -119,10 +118,12 @@ export function ensureExchangeRateCard(root) {
     featuresStatus.style.color = '';
     smmEnabled.disabled = true;
     accountsEnabled.disabled = true;
+    nextdoorEnabled.disabled = true;
     try {
       const body = { initData: initData(), action: key };
       if (key === 'save_smm_enabled') body.smm_enabled = enabled;
-      else body.accounts_enabled = enabled;
+      else if (key === 'save_accounts_enabled') body.accounts_enabled = enabled;
+      else body.nextdoor_enabled = enabled;
       const { data, error } = await supabase.functions.invoke('litesms-exchange-rate', { body });
       if (error || data?.error) throw new Error(data?.error || error?.message || 'Unable to save dashboard visibility');
       featuresStatus.textContent = 'Saved';
@@ -132,10 +133,12 @@ export function ensureExchangeRateCard(root) {
       featuresStatus.textContent = e?.message || 'Unable to save dashboard visibility';
       featuresStatus.style.color = '#b91c1c';
       if (key === 'save_smm_enabled') smmEnabled.checked = !enabled;
-      else accountsEnabled.checked = !enabled;
+      else if (key === 'save_accounts_enabled') accountsEnabled.checked = !enabled;
+      else nextdoorEnabled.checked = !enabled;
     } finally {
       smmEnabled.disabled = false;
       accountsEnabled.disabled = false;
+      nextdoorEnabled.disabled = false;
     }
   };
 
